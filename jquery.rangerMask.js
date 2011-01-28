@@ -1,9 +1,9 @@
 /*
-	RangerMask
-	Masked Input plugin for jQuery
-	Copyright (c) 2010 Jeffery Walker (WalkerCodeRanger.com)
-	Licensed under ...
-	Version: 0.1.0
+RangerMask
+Masked Input plugin for jQuery
+Copyright (c) 2010 Jeffery Walker (WalkerCodeRanger.com)
+Licensed under ...
+Version: 0.1.0
 */
 
 /*
@@ -65,7 +65,7 @@ var RangerMask = new (function ()
 		//fields
 		this.regEx = null;
 		this.sections = [];
-		this.placeholderVal = "";
+		this.placeholderVal = "_";
 	}
 
 	// Define
@@ -80,7 +80,7 @@ var RangerMask = new (function ()
 		return this;
 	}
 
-	Mask.prototype.customField = function (places, placeholder)
+	Mask.prototype.field = function (places, placeholder)
 	{
 		this.sections.push(new Field(this, places, placeholder));
 		return this;
@@ -149,10 +149,10 @@ var RangerMask = new (function ()
 	function Field(mask, places, placeholder)
 	{
 		this.mask = mask;
-		this.placeholder = placeholder ? placeholder : mask.placeholder;
+		this.placeholder = placeholder ? placeholder : mask.placeholderVal;
 		placeholder = this.placeholder; // Set the placeholder value back to that it is available
 		this.blankVal = $.map(places, function (p) { return p.optional ? "" : placeholder }).join("");
-		this.pattern = $.map(places, function (p) { return "[" + p.charClass + placeholder + "]"
+		this.pattern = $.map(places, function (p) { return p.createPattern(placeholder); }).join("");
 	}
 
 	function Separator(mask, value)
@@ -167,6 +167,14 @@ var RangerMask = new (function ()
 		this.optional = optional;
 		this.defaultFill = defaultFill;
 	}
+
+	Place.prototype.createPattern = function (placeholder)
+	{
+		if(this.optional)
+			return "[" + this.charClass + "]?";
+		else
+			return "[" + this.charClass + placeholder + "]";
+	};
 
 	this.definitions =
 	{
@@ -183,11 +191,71 @@ var RangerMask = new (function ()
 				new Place("0-9", true)]
 	};
 
-	this.define = function (pattern)
+	// Find the longest defintion that starts the pattern
+	function startsWithDefinition(pattern, definitions)
+	{
+		var definition = "";
+		for(def in definitions)
+			if(pattern.indexOf(def) == 0) // i.e. pattern.startsWith(def)
+				if(def.length >= definition.length) // if two patterns are same length take longer
+					definition = def;
+
+		return definition.length > 0 ? definition : null;
+	}
+
+	this.define = function (pattern, placeholder)
 	{
 		var mask = new Mask();
+
+		if(placeholder)
+			mask.placeholder(placeholder);
+
 		if(pattern)
-			mask.sections.push(new Separator(mask, pattern));
+		{
+			var separatorValue = "";
+			var fieldPlaces = [];
+			while(pattern.length > 0)
+			{
+				//pattern = pattern.substr(1);
+				// TODO handle escape chars
+
+				var definition = startsWithDefinition(pattern, this.definitions);
+
+				if(definition)
+				{
+					if(separatorValue.length > 0)
+					{
+						mask.separator(separatorValue);
+						separatorValue = "";
+					}
+
+					fieldPlaces = fieldPlaces.concat(this.definitions[definition]);
+					pattern = pattern.substr(definition.length);
+				}
+				else
+				{
+					if(fieldPlaces.length > 0)
+					{
+						mask.field(fieldPlaces);
+						fieldPlaces = [];
+					}
+
+					separatorValue += pattern.substr(0, 1);
+					pattern = pattern.substr(1);
+				}
+			}
+
+			// Add the last field or separator
+			if(fieldPlaces.length > 0)
+			{
+				mask.field(fieldPlaces);
+				fieldPlaces = [];
+			} else if(separatorValue.length > 0)
+			{
+				mask.separator(separatorValue);
+				separatorValue = "";
+			}
+		}
 		return mask;
 	};
 
@@ -204,7 +272,7 @@ var RangerMask = new (function ()
 	function getSelection(element)
 	{
 		var caret, length;
-		if (element.setSelectionRange)
+		if(element.setSelectionRange)
 		{
 			caret = element.selectionStart;
 			length = element.selectionEnd - caret;
@@ -221,7 +289,7 @@ var RangerMask = new (function ()
 	function setSelection(element, selection)
 	{
 		var end = selection.caret + selection.length;
-		if (element.setSelectionRange)
+		if(element.setSelectionRange)
 			element.setSelectionRange(selection.caret, end);
 		else //if (this.createTextRange)
 		{
@@ -246,16 +314,16 @@ var RangerMask = new (function ()
 
 	$.fn.rangerMask = function (mask)
 	{
-		this.each(function()
-			{
-				var element = $(this);
-				var data = new Object();
-				data.maxlength = element.attr("maxlength");
-				element.removeAttr("maxlength");
-				mask.init(data, element.val());
-				element.data("rangerMaskData", data);
-			})
-			.bind("paste", function(e)
+		this.each(function ()
+		{
+			var element = $(this);
+			var data = new Object();
+			data.maxlength = element.attr("maxlength");
+			element.removeAttr("maxlength");
+			mask.init(data, element.val());
+			element.data("rangerMaskData", data);
+		})
+			.bind("paste", function (e)
 			{
 				var element = $(this);
 				var data = element.data("rangerMaskData");

@@ -63,6 +63,7 @@ function SetupData(value)
 describe("RangerMask", function ()
 {
 	var mask;
+	var data;
 
 	describe("Empty mask", function ()
 	{
@@ -95,14 +96,14 @@ describe("RangerMask", function ()
 
 		it("should init a valid value", function ()
 		{
-			var data = new Object();
+			data = new Object();
 			mask.init(data, "s$ ");
 			expect(valueOf(data)).toEqual(["^s$ ^"]);
 		});
 
 		it("should init an invalid value", function ()
 		{
-			var data = new Object()
+			data = new Object()
 			mask.init(data, "foo");
 			expect(valueOf(data)).toEqual(["^s$ ^"]);
 		});
@@ -113,7 +114,7 @@ describe("RangerMask", function ()
 		it("can be defined", function ()
 		{
 			var places = RangerMask.definitions["A"];
-			mask = RangerMask.define().customField(places, "_");
+			mask = RangerMask.define().field(places, "_");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -125,16 +126,57 @@ describe("RangerMask", function ()
 
 		it("should init a valid value", function ()
 		{
-			var data = new Object();
+			data = new Object();
 			mask.init(data, "P");
 			expect(valueOf(data)).toEqual(["^P^"]);
 		});
 
 		it("should init an invalid value", function ()
 		{
-			var data = new Object();
+			data = new Object();
 			mask.init(data, "34");
 			expect(valueOf(data)).toEqual(["^_^"]);
+		});
+	});
+
+	describe("single place field mask", function ()
+	{
+		it("can be defined", function ()
+		{
+			mask = RangerMask.define("9", "_");
+			expect(mask).toBeDefined();
+			expect(mask).not.toBeNull();
+		});
+
+		it("should have proper blank value", function ()
+		{
+			expect(mask.blankVal()).toEqual("_");
+		});
+
+		it("should init an invalid value", function ()
+		{
+			data = new Object();
+			mask.init(data, "ab");
+			expect(valueOf(data)).toEqual(["^_^"]);
+		});
+
+		it("should init a valid value", function ()
+		{
+			data = new Object();
+			mask.init(data, "8");
+			expect(valueOf(data)).toEqual(["^8^"]);
+		});
+
+		it("should block invalid char (and not change selection)", function ()
+		{
+			mask.type(data, "h");
+			expect(valueOf(data)).toEqual(["^8^"]);
+		});
+
+		it("should accept valid char", function ()
+		{
+			mask.type(data, "3");
+			expect(valueOf(data)).toEqual(["3^"]);
 		});
 	});
 });
