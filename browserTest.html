@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Browser Test</title>
+	<script type="text/javascript" src="jquery-1.4.4.js" ></script>
+</head>
+<body>
+
+<input type="text" value="left" />
+<input id="test" type="text" value="hello" maxlength=20 />
+<input type="text" value="right" /><br />
+
+<textarea id="log" cols=50 rows=20 ></textarea><br />
+<input type=button value="Clear" onclick="$('#log').val('')" />
+
+<script type="text/javascript" language="javascript">
+	$(document).ready(function ()
+	{
+		var test = $("#test");
+		var logArea = $("#log");
+		function log(message)
+		{
+			logArea.val(message + "\t\t\"" + test.val() + "\"\n" + logArea.val());
+		}
+
+		test
+			.blur(function (e)
+			{
+				log("blur");
+			})
+			.focus(function (e)
+			{
+				log("focus");
+			})
+			.focusin(function (e)
+			{
+				log("focusin");
+			})
+			.focusout(function (e)
+			{
+				log("focusout");
+			})
+			.change(function (e)
+			{
+				log("change");
+			})
+			.keydown(function (e)
+			{
+				log("keydown: " + e.which);
+			})
+			.keypress(function (e)
+			{
+				log("keypress: '" + String.fromCharCode(e.which) + "' (" + e.which + ")");
+			})
+			.keyup(function (e)
+			{
+				log("keyup: " + e.which);
+			})
+			.bind("paste", function (e)
+			{
+				log("paste");
+			})
+			.bind("input", function (e)
+			{
+				log("input");
+			});
+	});
+</script>
+</body>
+</html>

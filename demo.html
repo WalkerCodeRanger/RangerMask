@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Masking Demo</title>
+	<script type="text/javascript" src="jquery-1.4.4.js" ></script>
+	<script type="text/javascript" src="jquery.rangerMask.js" ></script>
+</head>
+<body>
+<input type="text" value="left" />
+<input id="test" type="text" value="123-45-6789" maxlength=11 />
+<input type="text" value="right" /><br />
+
+
+<script type="text/javascript" language="javascript">
+	$(document).ready(function ()
+	{
+		var test = $("#test");
+		test.rangerMask(RangerMask.ssn);
+	});
+</script>
+</body>
+</html>
