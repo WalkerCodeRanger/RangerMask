@@ -66,9 +66,7 @@ var RangerMask = {};
 
 	function copyData(from, to)
 	{
-		if(!to)
-			to = new Object();
-		
+		if(!to) to = new Object();
 		to.sections = from.sections.slice(0);
 		to.caret = from.caret;
 		to.selection = from.selection;
@@ -159,7 +157,6 @@ var RangerMask = {};
 			data.caret -= 1;
 			data.selection = 1;
 		}
-
 		this.deleteSelection(data);
 	}
 
@@ -167,11 +164,11 @@ var RangerMask = {};
 	{
 		if(data.selection == 0)
 		{
-			if(data.caret == data.sections.join("").length) // ignore delete at end
+			if(data.caret == this.val(data).length) // ignore delete at end
 				return;
+
 			data.selection = 1;
 		}
-
 		this.deleteSelection(data);
 	}
 
@@ -224,7 +221,7 @@ var RangerMask = {};
 		var definition = "";
 		for(def in rmask.definitions)
 			if(pattern.indexOf(def) == 0) // i.e. pattern.startsWith(def)
-				if(def.length >= definition.length) // if two patterns are same length take longer
+				if(def.length > definition.length) // take longest match (two defs of same length couldn't both match)
 					definition = def;
 
 		return definition.length > 0 ? definition : null;
@@ -234,6 +231,7 @@ var RangerMask = {};
 
 	rmask.addDef  = function(name)
 	{
+		// TODO a def can't contain the escape char /
 		var places = rmask.definitions[name] = [];
 		return new PlaceBuilder(places);
 	}
@@ -247,33 +245,40 @@ var RangerMask = {};
 
 		if(pattern)
 		{
-			var separatorValue = "";
 			var fieldPlaces = [];
+			var separatorValue = "";
+			var pushField = function()
+			{
+				if(fieldPlaces.length > 0)
+				{
+					mask.sections.push(new Field(mask, fieldPlaces));
+					fieldPlaces = [];
+				}
+			};
+			var pushSeparator = function()
+			{
+				if(separatorValue.length > 0)
+				{
+					mask.sections.push(new Separator(mask, separatorValue));
+					separatorValue = "";
+				}
+			};
 			while(pattern.length > 0)
 			{
-				//pattern = pattern.substr(1);
-				// TODO handle escape chars
-
 				var definition = startsWithDefinition(pattern, rmask.definitions);
-
 				if(definition)
 				{
-					if(separatorValue.length > 0)
-					{
-						mask.sections.push(new Separator(mask, separatorValue));
-						separatorValue = "";
-					}
-
+					pushSeparator();
 					fieldPlaces = fieldPlaces.concat(rmask.definitions[definition]);
 					pattern = pattern.substr(definition.length);
 				}
 				else
 				{
-					if(fieldPlaces.length > 0)
-					{
-						mask.sections.push(new Field(mask, fieldPlaces));
-						fieldPlaces = [];
-					}
+					pushField();
+
+					// Support escape of next char
+					if(pattern.indexOf("/") == 0) // i.e. pattern.startsWith("/")
+						pattern = pattern.substr(1);
 
 					separatorValue += pattern.substr(0, 1);
 					pattern = pattern.substr(1);
@@ -281,15 +286,8 @@ var RangerMask = {};
 			}
 
 			// Add the last field or separator
-			if(fieldPlaces.length > 0)
-			{
-				mask.sections.push(new Field(mask, fieldPlaces));
-				fieldPlaces = [];
-			} else if(separatorValue.length > 0)
-			{
-				mask.sections.push(new Separator(mask, separatorValue));
-				separatorValue = "";
-			}
+			pushField();
+			pushSeparator();
 		}
 		return mask;
 	};
@@ -305,7 +303,13 @@ RangerMask.addDef("a").place("A-Za-z", true);
 RangerMask.addDef("A").place("A-Za-z", false);
 RangerMask.addDef("*").place("A-Za-z0-9", true);
 RangerMask.addDef("?").place("A-Za-z0-9", false);
+RangerMask.addDef("mm").place("1-9", false).place("0-9", true);
+RangerMask.addDef("MM").place("0-9", false, "0").place("0-9", false);
 RangerMask.addDef("dd").place("1-9", false).place("0-9", true);
+RangerMask.addDef("DD").place("0-9", false, "0").place("0-9", false);
+RangerMask.addDef("yy").place("0-9", false).place("0-9", true);
+RangerMask.addDef("yyyy").place("0-9", true).place("0-9", true).place("0-9", true).place("0-9", true);
+RangerMask.addDef("yyYY").place("1-9", true).place("0-9", true).place("0-9", false).place("0-9", false);
 
 // Define standard masks
 RangerMask.zip = RangerMask.define("99999");
@@ -314,6 +318,8 @@ RangerMask.ssn = RangerMask.define("999-99-9999");
 RangerMask.ein = RangerMask.define("99-999999");
 RangerMask.ip = RangerMask.define("##0.##0.##0.##0");
 RangerMask.ip6 = RangerMask.define("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx");
+RangerMask.guid = RangerMask.define("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
+RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}");
 
 (function ($)
 {
