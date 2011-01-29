@@ -36,14 +36,14 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "s$ ");
-			expect(valueOf(data)).toEqual(["^s$ ^"]);
+			expect(valueOf(data)).toEqual("^s$ ^");
 		});
 
 		it("should init an invalid value", function ()
 		{
 			data = new Object()
 			mask.init(data, "foo");
-			expect(valueOf(data)).toEqual(["^s$ ^"]);
+			expect(valueOf(data)).toEqual("^s$ ^");
 		});
 	});
 
@@ -80,21 +80,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "34");
-			expect(valueOf(data)).toEqual(["^_^"]);
+			expect(valueOf(data)).toEqual("^_^");
 		});
 
 		it("should init a valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "P");
-			expect(valueOf(data)).toEqual(["^P^"]);
+			expect(valueOf(data)).toEqual("^P^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "45x");
-			expect(valueOf(data)).toEqual(["^x^"]);
+			expect(valueOf(data)).toEqual("^x^");
 		});
 	});
 
@@ -116,21 +116,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "34");
-			expect(valueOf(data)).toEqual(["^___^"]);
+			expect(valueOf(data)).toEqual("^___^");
 		});
 
 		it("should init a valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "Pq4");
-			expect(valueOf(data)).toEqual(["^Pq4^"]);
+			expect(valueOf(data)).toEqual("^Pq4^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "Pqx");
-			expect(valueOf(data)).toEqual(["^Pq_^"]);
+			expect(valueOf(data)).toEqual("^Pq_^");
 		});
 	});
 
@@ -152,21 +152,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "Pq");
-			expect(valueOf(data)).toEqual(["^$", "__^"]);
+			expect(valueOf(data)).toEqual("^$__^");
 		});
 
 		it("should init an valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "$34");
-			expect(valueOf(data)).toEqual(["^$", "34^"]);
+			expect(valueOf(data)).toEqual("^$34^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "2a");
-			expect(valueOf(data)).toEqual(["^$", "2_^"]);
+			expect(valueOf(data)).toEqual("^$2_^");
 		});
 	});
 
@@ -188,21 +188,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "af");
-			expect(valueOf(data)).toEqual(["^__", "%^"]);
+			expect(valueOf(data)).toEqual("^__%^");
 		});
 
 		it("should init a valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "45%");
-			expect(valueOf(data)).toEqual(["^45", "%^"]);
+			expect(valueOf(data)).toEqual("^45%^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "a4");
-			expect(valueOf(data)).toEqual(["^4_", "%^"]);
+			expect(valueOf(data)).toEqual("^4_%^");
 		});
 	});
 
@@ -224,21 +224,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "af");
-			expect(valueOf(data)).toEqual(["^_", "-", "_^"]);
+			expect(valueOf(data)).toEqual("^_-_^");
 		});
 
 		it("should init a valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "5-6");
-			expect(valueOf(data)).toEqual(["^5", "-", "6^"]);
+			expect(valueOf(data)).toEqual("^5-6^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "-9");
-			expect(valueOf(data)).toEqual(["^_", "-", "9^"]);
+			expect(valueOf(data)).toEqual("^_-9^");
 		});
 	});
 
@@ -260,21 +260,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "qn-kl");
-			expect(valueOf(data)).toEqual(["^{", "________", "-", "____", "-", "____", "-", "____", "-", "____________", "}^"]);
+			expect(valueOf(data)).toEqual("^{________-____-____-____-____________}^");
 		});
 
 		it("should init a valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "{F07DC0DA-F0DE-4F09-bcfd-63B36CC46FCF}");
-			expect(valueOf(data)).toEqual(["^{", "F07DC0DA", "-", "F0DE", "-", "4F09", "-", "bcfd", "-", "63B36CC46FCF", "}^"]);
+			expect(valueOf(data)).toEqual("^{F07DC0DA-F0DE-4F09-bcfd-63B36CC46FCF}^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "{F07DC0DA-F0DE-4F0");
-			expect(valueOf(data)).toEqual(["^{", "F07DC0DA", "-", "F0DE", "-", "4F0_", "-", "____", "-", "____________", "}^"]);
+			expect(valueOf(data)).toEqual("^{F07DC0DA-F0DE-4F0_-____-____________}^");
 		});
 	});
 
@@ -296,21 +296,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "af");
-			expect(valueOf(data)).toEqual(["^$", "_^"]);
+			expect(valueOf(data)).toEqual("^$_^");
 		});
 
 		it("should init a valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "$23");
-			expect(valueOf(data)).toEqual(["^$", "23^"]);
+			expect(valueOf(data)).toEqual("^$23^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "a8");
-			expect(valueOf(data)).toEqual(["^$", "8^"]);
+			expect(valueOf(data)).toEqual("^$8^");
 		});
 	});
 
@@ -332,21 +332,21 @@ describe("RangerMask.define", function ()
 		{
 			data = new Object();
 			mask.init(data, "sdgh");
-			expect(valueOf(data)).toEqual(["^_", "/", "_", "/", "__^"]);
+			expect(valueOf(data)).toEqual("^_/_/__^");
 		});
 
 		it("should init a valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "2/3/1986");
-			expect(valueOf(data)).toEqual(["^2", "/", "3", "/", "1986^"]);
+			expect(valueOf(data)).toEqual("^2/3/1986^");
 		});
 
 		it("should init a partially valid value", function ()
 		{
 			data = new Object();
 			mask.init(data, "/48/82");
-			expect(valueOf(data)).toEqual(["^_", "/", "48", "/", "82^"]);
+			expect(valueOf(data)).toEqual("^_/48/82^");
 		});
 	});
 });
