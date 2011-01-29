@@ -44,22 +44,6 @@ function valueOf(data)
 	return sections;
 }
 
-function ParsePattern(pattern)
-{
-	return {
-		caret : pattern.indexOf("^"),
-		selection : pattern.lastIndexOf("^")-pattern.indexOf("^"),
-		value : pattern.replace("^", "")
-	};
-}
-
-function SetupData(value)
-{
-	var data = new Object();
-
-}
-
-
 describe("RangerMask", function ()
 {
 	var mask;
@@ -84,7 +68,7 @@ describe("RangerMask", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define().separator("s$ ");
+			mask = RangerMask.define("s$ ");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -109,12 +93,11 @@ describe("RangerMask", function ()
 		});
 	});
 
-	describe("custom field mask", function ()
+	describe("single place field mask", function ()
 	{
 		it("can be defined", function ()
 		{
-			var places = RangerMask.definitions["A"];
-			mask = RangerMask.define().field(places, "_");
+			mask = RangerMask.define("A");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -122,6 +105,13 @@ describe("RangerMask", function ()
 		it("should have proper blank value", function ()
 		{
 			expect(mask.blankVal()).toEqual("_");
+		});
+
+		it("should init an invalid value", function ()
+		{
+			data = new Object();
+			mask.init(data, "34");
+			expect(valueOf(data)).toEqual(["^_^"]);
 		});
 
 		it("should init a valid value", function ()
@@ -131,52 +121,16 @@ describe("RangerMask", function ()
 			expect(valueOf(data)).toEqual(["^P^"]);
 		});
 
-		it("should init an invalid value", function ()
-		{
-			data = new Object();
-			mask.init(data, "34");
-			expect(valueOf(data)).toEqual(["^_^"]);
-		});
-	});
-
-	describe("single place field mask", function ()
-	{
-		it("can be defined", function ()
-		{
-			mask = RangerMask.define("9", "_");
-			expect(mask).toBeDefined();
-			expect(mask).not.toBeNull();
-		});
-
-		it("should have proper blank value", function ()
-		{
-			expect(mask.blankVal()).toEqual("_");
-		});
-
-		it("should init an invalid value", function ()
-		{
-			data = new Object();
-			mask.init(data, "ab");
-			expect(valueOf(data)).toEqual(["^_^"]);
-		});
-
-		it("should init a valid value", function ()
-		{
-			data = new Object();
-			mask.init(data, "8");
-			expect(valueOf(data)).toEqual(["^8^"]);
-		});
-
 		it("should block invalid char (and not change selection)", function ()
 		{
-			mask.type(data, "h");
-			expect(valueOf(data)).toEqual(["^8^"]);
+			mask.type(data, "5");
+			expect(valueOf(data)).toEqual(["^P^"]);
 		});
 
 		it("should accept valid char", function ()
 		{
-			mask.type(data, "3");
-			expect(valueOf(data)).toEqual(["3^"]);
+			mask.type(data, "b");
+			expect(valueOf(data)).toEqual(["b^"]);
 		});
 	});
 });

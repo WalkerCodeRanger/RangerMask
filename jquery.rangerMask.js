@@ -36,7 +36,18 @@ Typing separator selects whole next field
 // functions for handling events
 // break it into fields with the regex?
 
-var RangerMask = new (function ()
+/*
+Masks are composed of sections
+sections are either separators or fields
+fields are composed of fields
+
+*/
+
+// Namespace
+var RangerMask = {};
+
+// Setup Namespace
+(function (rmask)
 {
 	function padRight(value, count, pad)
 	{
@@ -53,37 +64,24 @@ var RangerMask = new (function ()
 		return str.replace(regExSpecials, "\\$&");
 	}
 
-	/*
-	Masks are composed of sections
-	sections are either separators or fields
-	fields are composed of fields
+	function copyData(from, to)
+	{
+		if(!to)
+			to = new Object();
+		
+		to.sections = from.sections.slice(0);
+		to.caret = from.caret;
+		to.selection = from.selection;
+		return to;
+	}
 
-	*/
-
+	// Class Mask
 	function Mask()
 	{
 		//fields
 		this.regEx = null;
 		this.sections = [];
-		this.placeholderVal = "_";
-	}
-
-	// Define
-	Mask.prototype.placeholder = function (placeholder)
-	{
-		this.placeholderVal = placeholder;
-	}
-
-	Mask.prototype.separator = function (value)
-	{
-		this.sections.push(new Separator(this, value));
-		return this;
-	}
-
-	Mask.prototype.field = function (places, placeholder)
-	{
-		this.sections.push(new Field(this, places, placeholder));
-		return this;
+		this.placeholder = "_";
 	}
 
 	// Properties
@@ -110,6 +108,14 @@ var RangerMask = new (function ()
 		data.selection = this.val(data).length;
 	}
 
+	Mask.prototype.deleteSelection = function(data)
+	{
+		if(data.selection > 0)
+		{
+			// TODO delete chars in selection
+		}
+	}
+
 	// Actions
 	Mask.prototype.init = function (data, value)
 	{
@@ -126,41 +132,65 @@ var RangerMask = new (function ()
 		}
 
 		this.selectAll(data);
+		// TODO if result is blank value, then empty string should be displayed
 	}
 
 	Mask.prototype.type = function (data, char)
 	{
+		var tryData = copyData(data);
+		this.deleteSelection(tryData);
+
 	}
 
 	Mask.prototype.paste = function (data, newValue)
 	{
-		this.backspace(data);
+		var tryData = copyData(data);
+		this.deleteSelection(tryData);
 		//TODO: Type all the characters pasted in
 	}
 
 	Mask.prototype.backspace = function (data)
 	{
+		if(data.selection == 0)
+		{
+			if(data.caret == 0) // ignore backspace at beginning
+				return;
+
+			data.caret -= 1;
+			data.selection = 1;
+		}
+
+		this.deleteSelection(data);
 	}
 
 	Mask.prototype.del = function (data)
 	{
+		if(data.selection == 0)
+		{
+			if(data.caret == data.sections.join("").length) // ignore delete at end
+				return;
+			data.selection = 1;
+		}
+
+		this.deleteSelection(data);
 	}
 
-	function Field(mask, places, placeholder)
+	// Class Field
+	function Field(mask, places)
 	{
 		this.mask = mask;
-		this.placeholder = placeholder ? placeholder : mask.placeholderVal;
-		placeholder = this.placeholder; // Set the placeholder value back to that it is available
-		this.blankVal = $.map(places, function (p) { return p.optional ? "" : placeholder }).join("");
-		this.pattern = $.map(places, function (p) { return p.createPattern(placeholder); }).join("");
+		this.blankVal = $.map(places, function (p) { return p.optional ? "" : mask.placeholder }).join("");
+		this.pattern = $.map(places, function (p) { return p.createPattern(mask.placeholder); }).join("");
 	}
 
+	// Class Field
 	function Separator(mask, value)
 	{
 		this.pattern = escapeRegEx(value);
 		this.blankVal = value;
 	}
 
+	// Class Place
 	function Place(charClass, optional, defaultFill)
 	{
 		this.charClass = charClass;
@@ -176,26 +206,23 @@ var RangerMask = new (function ()
 			return "[" + this.charClass + placeholder + "]";
 	};
 
-	this.definitions =
+	// Class PlaceBuilder
+	function PlaceBuilder(places)
 	{
-		"0": [new Place("0-9", false, "0")],
-		"9": [new Place("0-9", false)],
-		"#": [new Place("0-9", true)],
-		"x": [new Place("A-Fa-f0-9", true)],
-		"X": [new Place("A-Fa-f0-9", false)],
-		"a": [new Place("A-Za-z", true)],
-		"A": [new Place("A-Za-z", false)],
-		"*": [new Place("A-Za-z0-9", true)],
-		"?": [new Place("A-Za-z0-9", false)],
-		"dd": [new Place("1-9", false),
-				new Place("0-9", true)]
-	};
+		this.places = places;
+	}
+
+	PlaceBuilder.prototype.place = function(charClass, optional, defaultFill)
+	{
+		this.places.push(new Place(charClass, optional, defaultFill));
+		return this;
+	}
 
 	// Find the longest defintion that starts the pattern
-	function startsWithDefinition(pattern, definitions)
+	function startsWithDefinition(pattern)
 	{
 		var definition = "";
-		for(def in definitions)
+		for(def in rmask.definitions)
 			if(pattern.indexOf(def) == 0) // i.e. pattern.startsWith(def)
 				if(def.length >= definition.length) // if two patterns are same length take longer
 					definition = def;
@@ -203,12 +230,20 @@ var RangerMask = new (function ()
 		return definition.length > 0 ? definition : null;
 	}
 
-	this.define = function (pattern, placeholder)
+	rmask.definitions = {};
+
+	rmask.addDef  = function(name)
+	{
+		var places = rmask.definitions[name] = [];
+		return new PlaceBuilder(places);
+	}
+
+	rmask.define = function (pattern, options)
 	{
 		var mask = new Mask();
 
-		if(placeholder)
-			mask.placeholder(placeholder);
+		if(options && options.placeholder)
+			mask.placeholder = options.placeholder;
 
 		if(pattern)
 		{
@@ -219,24 +254,24 @@ var RangerMask = new (function ()
 				//pattern = pattern.substr(1);
 				// TODO handle escape chars
 
-				var definition = startsWithDefinition(pattern, this.definitions);
+				var definition = startsWithDefinition(pattern, rmask.definitions);
 
 				if(definition)
 				{
 					if(separatorValue.length > 0)
 					{
-						mask.separator(separatorValue);
+						mask.sections.push(new Separator(mask, separatorValue));
 						separatorValue = "";
 					}
 
-					fieldPlaces = fieldPlaces.concat(this.definitions[definition]);
+					fieldPlaces = fieldPlaces.concat(rmask.definitions[definition]);
 					pattern = pattern.substr(definition.length);
 				}
 				else
 				{
 					if(fieldPlaces.length > 0)
 					{
-						mask.field(fieldPlaces);
+						mask.sections.push(new Field(mask, fieldPlaces));
 						fieldPlaces = [];
 					}
 
@@ -248,24 +283,37 @@ var RangerMask = new (function ()
 			// Add the last field or separator
 			if(fieldPlaces.length > 0)
 			{
-				mask.field(fieldPlaces);
+				mask.sections.push(new Field(mask, fieldPlaces));
 				fieldPlaces = [];
 			} else if(separatorValue.length > 0)
 			{
-				mask.separator(separatorValue);
+				mask.sections.push(new Separator(mask, separatorValue));
 				separatorValue = "";
 			}
 		}
 		return mask;
 	};
+})(RangerMask);
 
-	this.zip = this.define("99999");
-	this.zip4 = this.define("99999-####");
-	this.ssn = this.define("999-99-9999");
-	this.ein = this.define("99-999999");
-	this.ip = this.define("##0.##0.##0.##0");
-	this.ip6 = this.define("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx");
-})();
+// Add standard definitions
+RangerMask.addDef("0").place("0-9", false, "0");
+RangerMask.addDef("9").place("0-9", false);
+RangerMask.addDef("#").place("0-9", true);
+RangerMask.addDef("x").place("A-Fa-f0-9", true);
+RangerMask.addDef("X").place("A-Fa-f0-9", false);
+RangerMask.addDef("a").place("A-Za-z", true);
+RangerMask.addDef("A").place("A-Za-z", false);
+RangerMask.addDef("*").place("A-Za-z0-9", true);
+RangerMask.addDef("?").place("A-Za-z0-9", false);
+RangerMask.addDef("dd").place("1-9", false).place("0-9", true);
+
+// Define standard masks
+RangerMask.zip = RangerMask.define("99999");
+RangerMask.zip4 = RangerMask.define("99999-####");
+RangerMask.ssn = RangerMask.define("999-99-9999");
+RangerMask.ein = RangerMask.define("99-999999");
+RangerMask.ip = RangerMask.define("##0.##0.##0.##0");
+RangerMask.ip6 = RangerMask.define("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx");
 
 (function ($)
 {
@@ -310,6 +358,8 @@ var RangerMask = new (function ()
 
 	function applyState(element, data)
 	{
+		element.val(data.sections.join(""));
+		setSelection(element[0], data);
 	}
 
 	$.fn.rangerMask = function (mask)
@@ -322,14 +372,28 @@ var RangerMask = new (function ()
 			element.removeAttr("maxlength");
 			mask.init(data, element.val());
 			element.data("rangerMaskData", data);
+			applyState(element, data);
 		})
-			.bind("paste", function (e)
+		.bind("keypress.rangerMask", function (e)
+		{
+			if(e.ctrlKey || e.altKey || e.metaKey)
+				return true;
+			if((32 <= e.which && e.which <= 126) || e.which >= 128) // If typeable char
 			{
 				var element = $(this);
 				var data = element.data("rangerMaskData");
-				mask.paste(data, element.val());
-				setSelection(this, data);
-			});
+				mask.type(data, String.fromCharCode(e.which));
+				applyState(element, data);
+			}
+			return false;
+		})
+		.bind("paste.rangerMask", function (e)
+		{
+			var element = $(this);
+			var data = element.data("rangerMaskData");
+			mask.paste(data, element.val());
+			setSelection(this, data);
+		});
 		return this;
 	};
 	$.fn.rangerUnmask = function ()
