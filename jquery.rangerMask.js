@@ -114,6 +114,33 @@ var RangerMask = {};
 		}
 	}
 
+	// typeInternal assumes that data.selection == 0
+	Mask.prototype.typeInternal = function (data, char)
+	{
+		// first section containing caret (i.e. __^-__ would be in first field, not the separator)
+		var index;
+		var past = 0;	
+		for(index=0; index<data.sections.length; index++)
+		{
+			if(past <= data.caret && data.caret-past <= data.sections[index].length)
+				break;
+
+			 past += data.sections[index].length;
+		}
+
+		var caretInSection = data.caret - past;
+		var result = null;
+		while(index < this.sections.length && result == null )
+		{
+			result = this.sections[index].type(data, char, index, caretInSection, past)
+			past += data.sections[index].length;
+			caretInSection = 0;
+			index++;
+		}
+
+		return result ? result : false;
+	}
+
 	// Actions
 	Mask.prototype.init = function (data, value)
 	{
@@ -124,9 +151,13 @@ var RangerMask = {};
 		else
 		{
 			data.sections = $.map(this.sections, function (s) { return s.blankVal; });
-			this.selectAll(data);
-			for(char in value.split())
-				this.type(data, char);
+			data.caret = 0;
+			data.selection = 0;
+			var mask = this; // so it is available below
+			$.each(value.split(""), function(i, char)
+			{
+				mask.type(data, char);
+			});
 		}
 
 		this.selectAll(data);
@@ -137,7 +168,8 @@ var RangerMask = {};
 	{
 		var tryData = copyData(data);
 		this.deleteSelection(tryData);
-
+		if(this.typeInternal(tryData, char));
+			copyData(tryData, data);
 	}
 
 	Mask.prototype.paste = function (data, newValue)
@@ -175,16 +207,61 @@ var RangerMask = {};
 	// Class Field
 	function Field(mask, places)
 	{
+		this.isField = true;
 		this.mask = mask;
 		this.blankVal = $.map(places, function (p) { return p.optional ? "" : mask.placeholder }).join("");
 		this.pattern = $.map(places, function (p) { return p.createPattern(mask.placeholder); }).join("");
+		this.regEx = new RegExp("^"+this.pattern+"$");
 	}
 
-	// Class Field
+	Field.prototype.allows = function(value)
+	{
+		return this.regEx.test(value);
+	}
+
+	Field.prototype.type = function (data, char, index, caret, past)
+	{
+		var fieldValue = data.sections[index];
+		// TODO handle pushing
+		var offset = fieldValue.charAt(caret) == this.mask.placeholder ? 1 : 0;
+		var changedValue = fieldValue.slice(0, caret) + char + fieldValue.slice(caret+offset);
+			
+		if(this.allows(changedValue))
+		{
+			data.sections[index] = changedValue;
+			data.caret = past + caret + 1;
+			return true;
+		}
+		// Allow this character to spill over into the next section if that is valid
+		else if(caret == fieldValue.length)
+			return null; 
+		// Allow a separator char to jump us out of this field
+		else if(index+1 < data.sections.length && data.sections[index+1].indexOf(char) != -1)
+			return null;
+
+		return false;
+	}
+
+	// Class Separator
 	function Separator(mask, value)
 	{
+		this.isField = false;
 		this.pattern = escapeRegEx(value);
 		this.blankVal = value;
+	}
+
+	Separator.prototype.type = function(data, char, index, caret, past)
+	{
+		var value = data.sections[index];
+
+		// Advance past the char in question
+		var place = value.indexOf(char, caret);
+		if(place != -1)
+		{
+			data.caret = past + place + 1;
+			return true;
+		}
+		return null;
 	}
 
 	// Class Place
@@ -323,7 +400,7 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 (function ($)
 {
-	function getSelection(element)
+	function getSelection(element, data)
 	{
 		var caret, length;
 		if(element.setSelectionRange)
@@ -337,28 +414,29 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 			caret = 0 - range.duplicate().moveStart('character', -100000);
 			length = range.text.length;
 		}
-		return { caret: begin, selection: length };
+		data.caret = begin;
+		data.selection = length;
 	}
 
-	function setSelection(element, selection)
+	function setSelection(element, to)
 	{
-		var end = selection.caret + selection.length;
+		var end = to.caret + to.selection;
 		if(element.setSelectionRange)
-			element.setSelectionRange(selection.caret, end);
+			element.setSelectionRange(to.caret, end);
 		else //if (this.createTextRange)
 		{
 			var range = element.createTextRange();
 			range.collapse(true);
 			range.moveEnd('character', end);
-			range.moveStart('character', begin);
+			range.moveStart('character', to.caret);
 			range.select();
 		}
 	}
 
 	function storeOldValues(element)
 	{
-		var data = getSelection(element[0]);
-		data.length = element.valueOf().length;
+		var data = { length: element.valueOf().length };
+		getSelection(element[0], data);
 		element.data("rangerMaskData", data);
 	}
 
@@ -388,6 +466,7 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 			{
 				var element = $(this);
 				var data = element.data("rangerMaskData");
+				getSelection(this, data);
 				mask.type(data, String.fromCharCode(e.which));
 				applyState(element, data);
 			}

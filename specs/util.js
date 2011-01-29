@@ -14,3 +14,15 @@ function valueOf(data)
 	value = value.insertAt(caret, "^");
 	return value;
 }
+
+function dataFor(mask, value)
+{
+	var cleanValue = value.replace("^", "");
+	var data = new Object();
+	mask.init(data, cleanValue);
+	data.caret = value.indexOf("^");
+	data.selection = value.lastIndexOf("^") - data.caret;
+	if(valueOf(data) !== value)
+		throw "dataFor(\""+mask.blankVal()+"\", \""+value+"\") didn't match value provided, did you give an invalid value?";
+	return data;
+}
