@@ -40,13 +40,13 @@ describe("RangerMask.type", function ()
 			it("type invalid char doesn't change state", function ()
 			{
 				mask.type(data, "a");
-				expect(valueOf(data)).toEqual("^{___-_}");
+				expect(valueOf(mask, data)).toEqual("^{___-_}");
 			});
 
 			it("type valid char, goes to next field with caret after", function ()
 			{
 				mask.type(data, "3");
-				expect(valueOf(data)).toEqual("{3^__-_}");
+				expect(valueOf(mask, data)).toEqual("{3^__-_}");
 			});
 		});
 
@@ -60,13 +60,13 @@ describe("RangerMask.type", function ()
 			it("type invalid char doesn't change state", function ()
 			{
 				mask.type(data, "a");
-				expect(valueOf(data)).toEqual("{3^__-_}");
+				expect(valueOf(mask, data)).toEqual("{3^__-_}");
 			});
 
 			it("type valid char, replaces placeholder and puts caret after ", function ()
 			{
 				mask.type(data, "8");
-				expect(valueOf(data)).toEqual("{38^_-_}");
+				expect(valueOf(mask, data)).toEqual("{38^_-_}");
 			});
 		});
 
@@ -80,13 +80,13 @@ describe("RangerMask.type", function ()
 			it("type invalid char doesn't change state", function ()
 			{
 				mask.type(data, "a");
-				expect(valueOf(data)).toEqual("{34^_-_}");
+				expect(valueOf(mask, data)).toEqual("{34^_-_}");
 			});
 
 			it("type valid char, replaces placeholder and puts caret after ", function ()
 			{
 				mask.type(data, "8");
-				expect(valueOf(data)).toEqual("{348^-_}");
+				expect(valueOf(mask, data)).toEqual("{348^-_}");
 			});
 		});
 
@@ -100,13 +100,13 @@ describe("RangerMask.type", function ()
 			it("type invalid char doesn't change state", function ()
 			{
 				mask.type(data, "a");
-				expect(valueOf(data)).toEqual("{345^-_}");
+				expect(valueOf(mask, data)).toEqual("{345^-_}");
 			});
 
 			it("type valid char, replaces placeholder and puts caret after ", function ()
 			{
 				mask.type(data, "8");
-				expect(valueOf(data)).toEqual("{345-8^}");
+				expect(valueOf(mask, data)).toEqual("{345-8^}");
 			});
 		});
 	});
@@ -121,19 +121,19 @@ describe("RangerMask.type", function ()
 			data = dataFor(mask, "^{ }_._");
 
 			mask.type(data, "{");
-			expect(valueOf(data)).toEqual("{^ }_._");
+			expect(valueOf(mask, data)).toEqual("{^ }_._");
 		});
 
 		it("two separator chars", function ()
 		{
 			mask.type(data, "}");
-			expect(valueOf(data)).toEqual("{ }^_._");
+			expect(valueOf(mask, data)).toEqual("{ }^_._");
 		});
 
 		it("to next field", function ()
 		{
 			mask.type(data, ".");
-			expect(valueOf(data)).toEqual("{ }_.^_");
+			expect(valueOf(mask, data)).toEqual("{ }_.^_");
 		});
 	});
 });

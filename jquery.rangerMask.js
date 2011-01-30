@@ -49,13 +49,30 @@ var RangerMask = {};
 // Setup Namespace
 (function (rmask)
 {
-	function padRight(value, count, pad)
-	{
-		var padCount = count - value.length;
-		for(var i = 0; i < padCount; i++)
-			value += pad;
+//	function padRight(value, count, pad)
+//	{
+//		var padCount = count - value.length;
+//		for(var i = 0; i < padCount; i++)
+//			value += pad;
 
-		return value;
+//		return value;
+//	}
+
+//	function padLeft(value, count, pad)
+//	{
+//		var padCount = count - value.length;
+//		for(var i = 0; i < padCount; i++)
+//			value = pad + value;
+
+//		return value;
+//	}
+
+	function repeat(value, times)
+	{
+		var repeated = "";
+		for(var i=0; i<times; i++)
+			repeated += value;
+		return repeated;
 	}
 
 	var regExSpecials = /[.*?|()^$\[\]{}\\]/g; // .*+?|^$()[]{}\
@@ -67,43 +84,83 @@ var RangerMask = {};
 	function copyData(from, to)
 	{
 		if(!to) to = new Object();
-		to.sections = from.sections.slice(0);
+		to.places = from.places.slice(0);
 		to.caret = from.caret;
 		to.selection = from.selection;
 		return to;
 	}
 
+	var nullPlace =
+	{
+		type: function() { return false; },
+		push: function() { return false; },
+		seek: function() { return false; }
+	};
+
 	// Class Mask
 	function Mask()
 	{
-		//fields
 		this.regEx = null;
-		this.sections = [];
+		this.places = [];
 		this.placeholder = "_";
-	}
-
-	// Properties
-	Mask.prototype.blankVal = function ()
-	{
-		return $.map(this.sections, function (s) { return s.blankVal; }).join("");
 	}
 
 	Mask.prototype.val = function (data)
 	{
-		return data.sections.join("")
+		return data.places.join("")
+	}
+
+	Mask.prototype.maskedVal = function (data)
+	{
+		var placeholdersNeeded = 0;
+		var placeholder = this.placeholder; // make it available to lambdas
+		return $.map(this.places, function(place, i)
+		{
+			var placeVal = data.places[i];
+			// When you hit a real non-optional value, placeholder may be needed before it
+			if(placeVal != "" && !place.optional)
+			{
+				var placholders = repeat(placeholder, placeholdersNeeded);
+				placeholdersNeeded = 0;
+				return placholders + placeVal;
+			}
+
+			if(!place.optional && placeVal == "")
+				placeholdersNeeded++;
+			else if(place.optional && placeVal != "")
+				placeholdersNeeded--;
+
+			return placeVal;
+		}).join("") + repeat(placeholder, placeholdersNeeded); // May need placeholders at the end
 	}
 
 	// internal methods
-	Mask.prototype.initMask = function ()
+	Mask.prototype.init = function ()
 	{
-		if(this.regEx == null)
-			this.regEx = new RegExp("^" + $.map(this.sections, function (s) { return "(" + s.pattern + ")"; }).join("") + "$");
+		// init places
+		var next = nullPlace;
+		for(var i=this.places.length-1; i>=0; i--)
+		{
+			// init place
+			var place = this.places[i];
+			place.mask = this;
+			place.index = i;
+			place.next = next;
+			place.init();
+
+			// prepare for next
+			next = place;
+		}
+
+		// now that places are inited, we can build our regEx etc.
+		this.regEx = new RegExp("^" + $.map(this.places, function (p) { return "(" + p.pattern + ")"; }).join("") + "$");
+		this.maskedEmptyVal = $.map(this.places, function (p) { return p.maskedEmptyVal; }).join("");
 	}
 
 	Mask.prototype.selectAll = function (data)
 	{
 		data.caret = 0;
-		data.selection = this.val(data).length;
+		data.selection = this.places.length;
 	}
 
 	Mask.prototype.deleteSelection = function(data)
@@ -115,45 +172,45 @@ var RangerMask = {};
 	}
 
 	// typeInternal assumes that data.selection == 0
-	Mask.prototype.typeInternal = function (data, char)
-	{
-		// first section containing caret (i.e. __^-__ would be in first field, not the separator)
-		var index;
-		var past = 0;	
-		for(index=0; index<data.sections.length; index++)
-		{
-			if(past <= data.caret && data.caret-past <= data.sections[index].length)
-				break;
+//	Mask.prototype.typeInternal = function (data, char)
+//	{
+//		// first section containing caret (i.e. __^-__ would be in first field, not the separator)
+//		var index;
+//		var past = 0;	
+//		for(index=0; index<data.sections.length; index++)
+//		{
+//			if(past <= data.caret && data.caret-past <= data.sections[index].length)
+//				break;
 
-			 past += data.sections[index].length;
-		}
+//			 past += data.sections[index].length;
+//		}
 
-		var caretInSection = data.caret - past;
-		var result = null;
-		while(index < this.sections.length && result == null )
-		{
-			result = this.sections[index].type(data, char, index, caretInSection, past)
-			past += data.sections[index].length;
-			caretInSection = 0;
-			index++;
-		}
+//		var caretInSection = data.caret - past;
+//		var result = null;
+//		while(index < this.sections.length && result == null )
+//		{
+//			result = this.sections[index].type(data, char, index, caretInSection, past)
+//			past += data.sections[index].length;
+//			caretInSection = 0;
+//			index++;
+//		}
 
-		return result ? result : false;
-	}
+//		return result ? result : false;
+//	}
 
 	// Actions
-	Mask.prototype.init = function (data, value)
+	Mask.prototype.apply = function (data, value)
 	{
-		this.initMask();
+		var placeholder = this.placeholder; // make it available to lambdas
 		var matches = this.regEx.exec(value);
 		if(matches)
-			data.sections = matches.slice(1);
+			data.places = $.map(matches.slice(1), function(p) { return p==placeholder ? "" : p });
 		else
 		{
-			data.sections = $.map(this.sections, function (s) { return s.blankVal; });
+			data.places = $.map(this.places, function (p) { return p.emptyVal; });
 			data.caret = 0;
 			data.selection = 0;
-			var mask = this; // so it is available below
+			var mask = this; // make it available to lambdas
 			$.each(value.split(""), function(i, char)
 			{
 				mask.type(data, char);
@@ -161,14 +218,13 @@ var RangerMask = {};
 		}
 
 		this.selectAll(data);
-		// TODO if result is blank value, then empty string should be displayed
 	}
 
 	Mask.prototype.type = function (data, char)
 	{
 		var tryData = copyData(data);
 		this.deleteSelection(tryData);
-		if(this.typeInternal(tryData, char));
+		if(this.places[tryData.caret].type(tryData, char));
 			copyData(tryData, data);
 	}
 
@@ -204,80 +260,128 @@ var RangerMask = {};
 		this.deleteSelection(data);
 	}
 
-	// Class Field
-	function Field(mask, places)
-	{
-		this.isField = true;
-		this.mask = mask;
-		this.blankVal = $.map(places, function (p) { return p.optional ? "" : mask.placeholder }).join("");
-		this.pattern = $.map(places, function (p) { return p.createPattern(mask.placeholder); }).join("");
-		this.regEx = new RegExp("^"+this.pattern+"$");
-	}
-
-	Field.prototype.allows = function(value)
-	{
-		return this.regEx.test(value);
-	}
-
-	Field.prototype.type = function (data, char, index, caret, past)
-	{
-		var fieldValue = data.sections[index];
-		// TODO handle pushing
-		var offset = fieldValue.charAt(caret) == this.mask.placeholder ? 1 : 0;
-		var changedValue = fieldValue.slice(0, caret) + char + fieldValue.slice(caret+offset);
-			
-		if(this.allows(changedValue))
-		{
-			data.sections[index] = changedValue;
-			data.caret = past + caret + 1;
-			return true;
-		}
-		// Allow this character to spill over into the next section if that is valid
-		else if(caret == fieldValue.length)
-			return null; 
-		// Allow a separator char to jump us out of this field
-		else if(index+1 < data.sections.length && data.sections[index+1].indexOf(char) != -1)
-			return null;
-
-		return false;
-	}
-
-	// Class Separator
-	function Separator(mask, value)
-	{
-		this.isField = false;
-		this.pattern = escapeRegEx(value);
-		this.blankVal = value;
-	}
-
-	Separator.prototype.type = function(data, char, index, caret, past)
-	{
-		var value = data.sections[index];
-
-		// Advance past the char in question
-		var place = value.indexOf(char, caret);
-		if(place != -1)
-		{
-			data.caret = past + place + 1;
-			return true;
-		}
-		return null;
-	}
-
 	// Class Place
 	function Place(charClass, optional, defaultFill)
 	{
-		this.charClass = charClass;
+		this.fixed = false;
 		this.optional = optional;
+		this.charClass = charClass;
 		this.defaultFill = defaultFill;
+		this.emptyVal = "";
+		this.regEx = new RegExp("^["+charClass+"]$");
 	}
 
-	Place.prototype.createPattern = function (placeholder)
+	Place.prototype.clone = function()
 	{
-		if(this.optional)
-			return "[" + this.charClass + "]?";
+		return new Place(this.charClass, this.optional, this.defaultFill);
+	}
+
+	Place.prototype.init = function ()
+	{
+		this.pattern = this.optional ? "[" + this.charClass + "]?" : "[" + this.charClass + this.mask.placeholder + "]";
+		this.maskedEmptyVal = this.optional ? "" : this.mask.placeholder;
+	};
+
+	//	Field.prototype.type = function (data, char, index, caret, past)
+//	{
+//		var fieldValue = data.sections[index];
+//		// TODO handle pushing
+//		var offset = fieldValue.charAt(caret) == this.mask.placeholder ? 1 : 0;
+//		var changedValue = fieldValue.slice(0, caret) + char + fieldValue.slice(caret+offset);
+//			
+//		if(this.allows(changedValue))
+//		{
+//			data.sections[index] = changedValue;
+//			data.caret = past + caret + 1;
+//			return true;
+//		}
+//		// Allow this character to spill over into the next section if that is valid
+//		else if(caret == fieldValue.length)
+//			return null; 
+//		// Allow a separator char to jump us out of this field
+//		else if(index+1 < data.sections.length && data.sections[index+1].indexOf(char) != -1)
+//			return null;
+
+//		return false;
+//	}
+
+	Place.prototype.val = function(data, value)
+	{
+		if(value)
+			data.places[this.index] = value;
 		else
-			return "[" + this.charClass + placeholder + "]";
+			return data.places[this.index];
+	}
+
+	Place.prototype.type = function(data, char)
+	{
+		if(this.regEx.test(char))
+		{
+			if(this.val(data) == "" || this.next.push(data, this.val(data)))
+			{
+				this.val(data, char);
+				data.caret = this.index + 1;
+				return true;
+			}
+			return false;
+		}
+		else
+			return this.next.seek(data, char, false); // TODO seems like there is more to it than this
+	};
+
+	Place.prototype.seek = function(data, char, fixedPlaceFound)
+	{
+		if(fixedPlaceFound || this.val(data) != "")
+			return false;
+
+		return this.next.seek(data, char, false);
+	};
+
+	Place.prototype.push = function(data, char)
+	{
+		return false; // TODO Not Implememented
+	};
+
+	// Class FixedPlace
+	function FixedPlace(value)
+	{
+		this.fixed = true;
+		this.optional = false;
+		this.pattern = escapeRegEx(value);
+		this.value = value;
+		this.emptyVal = value;
+		this.maskedEmptyVal = value;
+	};
+
+	FixedPlace.prototype.init = function ()
+	{
+	};
+
+	FixedPlace.prototype.type = function(data, char)
+	{
+		if(char == this.value)
+		{
+			data.caret = this.index + 1;
+			return true;
+		}
+		else
+			return this.next.type(data, char);
+	}
+
+	FixedPlace.prototype.seek = function(data, char, fixedPlaceFound)
+	{
+		if(char == this.value)
+		{
+			data.caret = this.index + 1;
+			return true;
+		}
+
+		return this.next.seek(data, char, true);
+	};
+
+	FixedPlace.prototype.push = function(data, char)
+	{
+		return false; // TODO Not Implememented
 	};
 
 	// Class PlaceBuilder
@@ -320,52 +424,29 @@ var RangerMask = {};
 		if(options && options.placeholder)
 			mask.placeholder = options.placeholder;
 
-		if(pattern)
+		while(pattern.length > 0)
 		{
-			var fieldPlaces = [];
-			var separatorValue = "";
-			var pushField = function()
+			var definition = startsWithDefinition(pattern, rmask.definitions);
+			if(definition)
 			{
-				if(fieldPlaces.length > 0)
+				$.each(rmask.definitions[definition], function(i, place)
 				{
-					mask.sections.push(new Field(mask, fieldPlaces));
-					fieldPlaces = [];
-				}
-			};
-			var pushSeparator = function()
-			{
-				if(separatorValue.length > 0)
-				{
-					mask.sections.push(new Separator(mask, separatorValue));
-					separatorValue = "";
-				}
-			};
-			while(pattern.length > 0)
-			{
-				var definition = startsWithDefinition(pattern, rmask.definitions);
-				if(definition)
-				{
-					pushSeparator();
-					fieldPlaces = fieldPlaces.concat(rmask.definitions[definition]);
-					pattern = pattern.substr(definition.length);
-				}
-				else
-				{
-					pushField();
-
-					// Support escape of next char
-					if(pattern.indexOf("/") == 0) // i.e. pattern.startsWith("/")
-						pattern = pattern.substr(1);
-
-					separatorValue += pattern.substr(0, 1);
-					pattern = pattern.substr(1);
-				}
+					mask.places.push(place.clone());
+				});
+				pattern = pattern.substr(definition.length);
 			}
+			else
+			{
+				// Support escape of next char
+				if(pattern.indexOf("/") == 0) // i.e. pattern.startsWith("/")
+					pattern = pattern.substr(1);
 
-			// Add the last field or separator
-			pushField();
-			pushSeparator();
+				mask.places.push(new FixedPlace(pattern.substr(0, 1)));
+				pattern = pattern.substr(1);
+			}
 		}
+		mask.init();
+
 		return mask;
 	};
 })(RangerMask);
@@ -454,7 +535,7 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 			var data = new Object();
 			data.maxlength = element.attr("maxlength");
 			element.removeAttr("maxlength");
-			mask.init(data, element.val());
+			mask.apply(data, element.val());
 			element.data("rangerMaskData", data);
 			applyState(element, data);
 		})
