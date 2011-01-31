@@ -18,14 +18,19 @@ Features To Do:
 	handle things like , in currency
 	Ways to handle defaulted parts so "1/1"->"1/1/2011" etc?
 	delete
-	backaspace
-
+	backspace
+	
 Possible Features:
 	right to left places
 	context around a place allowing for more control (i.e. 61 is not a valid month)
 	empty display? ie. show " / / " for dates but grayed out
 	good way to do am/pm
 	functions for handling events
+	empty string mask? // Not needed becuase of optional
+	way to show optional areas, i.e. zip+4 as _____-____ where the -____ disappears on blur
+	ctrl+backspace backspaces to the begining of the word
+	alt+backspace is undo?
+	ctrl+delete it delete to end of word?
 
 Developer Notes:
 	Please note that places includes the final null place which always has the value ""
@@ -68,8 +73,11 @@ var RangerMask = {};
 		emptyVal: "",
 		maskedEmptyVal: "",
 		val: function() { return ""; },
+		maskedVal: function () { return ""; },
 		type: function() { return false; },
 		push: function() { return false; },
+		peekPull: function() { return ""; },
+		pull: function() { },
 		seek: function() { return false; },
 		del: function() { }
 	};
@@ -90,22 +98,9 @@ var RangerMask = {};
 		return { value: value, selection: { start: start, length: length }};
 	}
 
-	Mask.prototype.maskedPlaces = function(data)
-	{
-		var placeholder = this.placeholder; // make it available to lambda
-		return $.map(this.places, function(place, i)
-		{
-			var placeVal = place.val(data);
-			if(placeVal != "" || place.optional)
-				return placeVal;
-			else
-				return placeholder;
-		});
-	}
-
 	Mask.prototype.maskedState = function (data)
 	{
-		var maskedPlaces = this.maskedPlaces(data);
+		var maskedPlaces = $.map(this.places, function(place, i) { return place.maskedVal(data); });
 		var value = maskedPlaces.join("");
 		var start = maskedPlaces.slice(0, data.selection.start).join("").length;
 		var length = maskedPlaces.slice(0, data.selection.start + data.selection.length).join("").length - start;
@@ -144,8 +139,9 @@ var RangerMask = {};
 
 	Mask.prototype.deleteSelection = function(data)
 	{
-		var selectionEnd = data.selection.start + data.selection.length;
-		for(var i=data.selection.start; i<selectionEnd; i++)
+		var selectionEnd = data.selection.start + data.selection.length - 1;
+		// Becuase of pulling we have to go in reverse
+		for(var i=selectionEnd; data.selection.start <= i; i--)
 			this.places[i].del(data);
 
 		data.selection.length = 0;
@@ -169,6 +165,26 @@ var RangerMask = {};
 			});
 			this.selectAll(data);
 			return data;
+		}
+	}
+
+	// Sets the selection in the data accounting for optional fields etc.
+	Mask.prototype.setSelection = function(data, selection)
+	{
+		var past = 0;
+		var selectionEnd = selection.start + selection.length;
+		for(var i=0; i<this.places.length; i++)
+		{
+			if(past == selection.start)
+				data.selection.start = i;
+
+			if(past == selectionEnd)
+			{
+				data.selection.length = i - data.selection.start;
+				return; // done as soon as we find the end of the selection
+			}
+
+			past += this.places[i].maskedVal(data).length;
 		}
 	}
 
@@ -196,29 +212,25 @@ var RangerMask = {};
 
 	Mask.prototype.backspace = function (data)
 	{
-		// TODO this may be wrong because of blanks around the selection start
-		if(data.selection.length == 0)
-		{
-			if(data.selection.start == 0) // ignore backspace at beginning
-				return;
-
-			data.selection.start -= 1;
-			data.selection.length = 1;
-		}
-		this.deleteSelection(data);
+		if(data.selection.length > 0)
+			this.deleteSelection(data);
+		else
+			// Find the first delete-able char behind the cursor
+			for(var i=data.selection.start-1; i >= 0; i--)
+			{
+				var place = this.places[i];
+				if(!place.fixed && (place.val(data) != "" || !place.optional))
+				{
+					this.places[i].del(data);
+					data.selection.start = i;
+					break;
+				}
+			}
 	}
 
 	Mask.prototype.del = function (data)
 	{
-		// TODO this may be wrong because of blanks around the selection start
-		if(data.selection.length == 0)
-		{
-			if(data.selection.start == this.places.length) // ignore delete at end
-				return;
-
-			data.selection.length = 1;
-		}
-		this.deleteSelection(data);
+		// TODO Not Yet Implemented
 	}
 
 	// Class Place
@@ -249,6 +261,15 @@ var RangerMask = {};
 			return data.places[this.index];
 		else
 			data.places[this.index] = value;
+	}
+
+	Place.prototype.maskedVal = function(data)
+	{
+		var val = this.val(data);
+		if(val != "" || this.optional)
+			return val;
+		else
+			return this.mask.placeholder;
 	}
 
 	Place.prototype.type = function(data, char)
@@ -283,9 +304,43 @@ var RangerMask = {};
 		return false; // TODO Not Implememented
 	}
 
+	// Returns the value that will be pulled, if the puller can pull it, he calls pull()
+	Place.prototype.peekPull = function(data)
+	{
+		var val = this.val(data);
+		if(this.optional && val == "")
+		{
+			val = this.next.peekPull(data);
+			if(this.regEx.test(val))
+				return val; // Do a pull across this place
+			else
+				return "";
+		}
+		else
+			return val;
+	}
+
+	// Tells us our value has been pulled, we will now try to pull our next
+	Place.prototype.pull = function(data)
+	{
+		var val = this.next.peekPull(data);
+		if(val == "" || this.regEx.test(val))
+		{
+			if(!this.optional || this.val(data) != "") // We are not doing a pull across
+				this.val(data, val);
+			this.next.pull(data);
+			return;
+		}
+
+		this.val(data, ""); // our value was pulled and we have nothing to replace it with
+	}
+
 	Place.prototype.del = function (data)
 	{
-		this.val(data, "");
+		if(!this.optional)
+			this.pull(data);
+		else
+			this.val(data, "");
 	}
 
 	// Class FixedPlace
@@ -304,6 +359,11 @@ var RangerMask = {};
 	};
 
 	FixedPlace.prototype.val = function(data)
+	{
+		return this.value;
+	}
+
+	FixedPlace.prototype.maskedVal = function(data)
 	{
 		return this.value;
 	}
@@ -334,6 +394,16 @@ var RangerMask = {};
 	{
 		return false; // TODO Not Implememented
 	};
+
+	FixedPlace.prototype.peekPull = function(data)
+	{
+		return this.next.peekPull(data); // pull across fixed places
+	}
+
+	FixedPlace.prototype.pull = function(data)
+	{
+		this.next.pull(data); // pull across fixed places
+	}
 
 	FixedPlace.prototype.del = function (data)
 	{
@@ -480,6 +550,13 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 		}
 	}
 
+	function getData(element, mask)
+	{
+		var data = element.data("rangerMaskData");
+		mask.setSelection(data, getSelection(element[0]));
+		return data;
+	}
+
 	function setState(element, state)
 	{
 		element.val(state.value);
@@ -502,6 +579,17 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 			element.val(mask.state(data).value);
 		})
+		.bind("keydown.rangerMask", function (e)
+		{
+			if(e.which == 8)
+			{
+				var element = $(this);
+				var data = getData(element, mask);
+				mask.backspace(data, data);
+				setState(element, mask.maskedState(data));
+				return false;
+			}
+		})
 		.bind("keypress.rangerMask", function (e)
 		{
 			if(e.ctrlKey || e.altKey || e.metaKey)
@@ -509,8 +597,7 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 			if((32 <= e.which && e.which <= 126) || e.which >= 128) // If typeable char
 			{
 				var element = $(this);
-				var data = element.data("rangerMaskData");
-				// ? = getSelection(this);
+				var data = getData(element, mask);
 				mask.type(data, String.fromCharCode(e.which));
 				setState(element, mask.maskedState(data));
 			}
@@ -520,12 +607,12 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 		{
 			var selection = getSelection(this);
 			var element = $(this);
+			var data = getData(element, mask);
 			// Use setTimeout to wait for the paste to complete
 			setTimeout(function()
 			{
 				var selectionAfterPaste = getSelection(element[0]);
 				var pastedText = element.val().slice(selection.start, selectionAfterPaste.start);
-				var data = element.data("rangerMaskData");
 				mask.paste(data, pastedText);
 				setState(element, mask.maskedState(data));;
 			}, 0);

@@ -19,10 +19,12 @@ function dataFor(mask, value)
 {
 	var cleanValue = value.replace(/\^/g, ""); // have to use regEx /g to replace all
 	var data = mask.apply(cleanValue);
-	data.selection.start = value.indexOf("^");
-	data.selection.length = value.lastIndexOf("^") - data.selection.start;
-	if(data.selection.length > 0)
-		data.selection.length -= 1; // Account for the ^ that started the selection
+	var selectionStart = value.indexOf("^");
+	var selectionLength = value.lastIndexOf("^") - selectionStart;
+	if(selectionLength > 0)
+		selectionLength -= 1; // Account for the ^ that started the selection
+
+	mask.setSelection(data, {start: selectionStart, length: selectionLength });
 	if(valueOf(mask, data) !== value)
 		throw "dataFor(\""+mask.maskedEmptyVal+"\", \""+value+"\") didn't match value provided, did you give an invalid value?";
 	return data;
