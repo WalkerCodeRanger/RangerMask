@@ -67,10 +67,11 @@ var RangerMask = {};
 		pattern: "",
 		emptyVal: "",
 		maskedEmptyVal: "",
+		val: function() { return ""; },
 		type: function() { return false; },
 		push: function() { return false; },
 		seek: function() { return false; },
-		val: function() { return ""; }
+		del: function() { }
 	};
 
 	// Class Mask
@@ -143,10 +144,11 @@ var RangerMask = {};
 
 	Mask.prototype.deleteSelection = function(data)
 	{
-		if(data.selection > 0)
-		{
-			// TODO delete chars in selection
-		}
+		var selectionEnd = data.selection.start + data.selection.length;
+		for(var i=data.selection.start; i<selectionEnd; i++)
+			this.places[i].del(data);
+
+		data.selection.length = 0;
 	}
 
 	// Actions
@@ -178,11 +180,18 @@ var RangerMask = {};
 			tryData.copy(data);
 	}
 
-	Mask.prototype.paste = function (data, newValue)
+	Mask.prototype.paste = function (data, pasted)
 	{
 		var tryData = data.copy();
 		this.deleteSelection(tryData);
-		//TODO: Type all the characters pasted in
+		var mask = this; // make it available to lambda
+		var changed = false;
+		$.each(pasted.split(""), function(i, char)
+		{
+			changed |= mask.places[tryData.selection.start].type(tryData, char)
+		});
+		if(changed)
+			tryData.copy(data);
 	}
 
 	Mask.prototype.backspace = function (data)
@@ -232,14 +241,14 @@ var RangerMask = {};
 	{
 		this.pattern = this.optional ? "[" + this.charClass + "]?" : "[" + this.charClass + this.mask.placeholder + "]";
 		this.maskedEmptyVal = this.optional ? "" : this.mask.placeholder;
-	};
+	}
 
 	Place.prototype.val = function(data, value)
 	{
-		if(value)
-			data.places[this.index] = value;
-		else
+		if(typeof value === 'undefined')
 			return data.places[this.index];
+		else
+			data.places[this.index] = value;
 	}
 
 	Place.prototype.type = function(data, char)
@@ -259,7 +268,7 @@ var RangerMask = {};
 		else
 			return this.next.seek(data, char, false); // TODO seems like there is more to it than this
 														// i.e. if we are optional then we could type next
-	};
+	}
 
 	Place.prototype.seek = function(data, char, fixedPlaceFound)
 	{
@@ -267,12 +276,17 @@ var RangerMask = {};
 			return false;
 
 		return this.next.seek(data, char, false);
-	};
+	}
 
 	Place.prototype.push = function(data, char)
 	{
 		return false; // TODO Not Implememented
-	};
+	}
+
+	Place.prototype.del = function (data)
+	{
+		this.val(data, "");
+	}
 
 	// Class FixedPlace
 	function FixedPlace(value)
@@ -320,6 +334,11 @@ var RangerMask = {};
 	{
 		return false; // TODO Not Implememented
 	};
+
+	FixedPlace.prototype.del = function (data)
+	{
+		// delete has no affect on a fixed place
+	}
 
 	// Class PlaceBuilder
 	function PlaceBuilder(places)
@@ -429,8 +448,9 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 (function ($)
 {
-	function getSelection(element, selection)
+	function getSelection(element)
 	{
+		var selection = {};
 		if(element.setSelectionRange)
 		{
 			selection.start = element.selectionStart;
@@ -442,6 +462,7 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 			selection.start = 0 - range.duplicate().moveStart('character', -100000);
 			selection.length = range.text.length;
 		}
+		return selection;
 	}
 
 	function setSelection(element, selection)
@@ -466,7 +487,9 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 	}
 
 	$.fn.rangerMask = function (mask)
-	{
+	{	
+		// TODO remove any existing rangerMask on the elements
+		// TODO filter to element the mask works on?
 		this.each(function ()
 		{
 			var element = $(this);
@@ -487,7 +510,7 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 			{
 				var element = $(this);
 				var data = element.data("rangerMaskData");
-				getSelection(this, data);
+				// ? = getSelection(this);
 				mask.type(data, String.fromCharCode(e.which));
 				setState(element, mask.maskedState(data));
 			}
@@ -495,10 +518,17 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 		})
 		.bind("paste.rangerMask", function (e)
 		{
+			var selection = getSelection(this);
 			var element = $(this);
-			var data = element.data("rangerMaskData");
-			mask.paste(data, element.val());
-			setState(element, mask.maskedState(data));;
+			// Use setTimeout to wait for the paste to complete
+			setTimeout(function()
+			{
+				var selectionAfterPaste = getSelection(element[0]);
+				var pastedText = element.val().slice(selection.start, selectionAfterPaste.start);
+				var data = element.data("rangerMaskData");
+				mask.paste(data, pastedText);
+				setState(element, mask.maskedState(data));;
+			}, 0);
 		});
 		return this;
 	};
