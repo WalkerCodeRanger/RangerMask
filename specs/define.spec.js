@@ -12,13 +12,13 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have empty blank value", function ()
+		it("should have empty masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("");
 		});
 	});
 
-	describe("Separator mask", function ()
+	describe("Fixed mask", function ()
 	{
 		it("can be defined", function ()
 		{
@@ -27,18 +27,18 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("s$ ");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("s$ ");
 			expect(valueOf(mask, data)).toEqual("^s$ ^");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("foo");
 			expect(valueOf(mask, data)).toEqual("^s$ ^");
@@ -54,7 +54,7 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should treat escaped chars as separator chars", function ()
+		it("should treat escaped chars as fixed places", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("v9v/v");
 		});
@@ -69,24 +69,24 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("_");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("34");
 			expect(valueOf(mask, data)).toEqual("^_^");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("P");
 			expect(valueOf(mask, data)).toEqual("^P^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("45x");
 			expect(valueOf(mask, data)).toEqual("^x^");
@@ -102,31 +102,31 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("___");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("34");
 			expect(valueOf(mask, data)).toEqual("^___^");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("Pq4");
 			expect(valueOf(mask, data)).toEqual("^Pq4^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("Pqx");
 			expect(valueOf(mask, data)).toEqual("^Pq_^");
 		});
 	});
 
-	describe("Prefix separator mask", function ()
+	describe("Fixed prefix mask", function ()
 	{
 		it("can be defined", function ()
 		{
@@ -135,31 +135,31 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("$__");
 		});
 
-		it("should init a invalid value", function ()
+		it("should apply to a invalid value", function ()
 		{
 			data = mask.apply("Pq");
 			expect(valueOf(mask, data)).toEqual("^$__^");
 		});
 
-		it("should init an valid value", function ()
+		it("should apply to an valid value", function ()
 		{
 			data = mask.apply("$34");
 			expect(valueOf(mask, data)).toEqual("^$34^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("2a");
 			expect(valueOf(mask, data)).toEqual("^$2_^");
 		});
 	});
 
-	describe("Suffix separator mask", function ()
+	describe("Fixed suffix mask", function ()
 	{
 		it("can be defined", function ()
 		{
@@ -168,31 +168,31 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("__%");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("af");
 			expect(valueOf(mask, data)).toEqual("^__%^");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("45%");
 			expect(valueOf(mask, data)).toEqual("^45%^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("a4");
 			expect(valueOf(mask, data)).toEqual("^4_%^");
 		});
 	});
 
-	describe("Infix separator mask", function ()
+	describe("Fixed place in middle mask", function ()
 	{
 		it("can be defined", function ()
 		{
@@ -201,31 +201,31 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("_-_");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("af");
 			expect(valueOf(mask, data)).toEqual("^_-_^");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("5-6");
 			expect(valueOf(mask, data)).toEqual("^5-6^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("-9");
 			expect(valueOf(mask, data)).toEqual("^_-9^");
 		});
 	});
 
-	describe("Mixed field/separator mask", function ()
+	describe("Muliple fixed & required places mask", function ()
 	{
 		it("can be defined", function ()
 		{
@@ -234,31 +234,31 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("{________-____-____-____-____________}");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("qn-kl");
 			expect(valueOf(mask, data)).toEqual("^{________-____-____-____-____________}^");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("{F07DC0DA-F0DE-4F09-bcfd-63B36CC46FCF}");
 			expect(valueOf(mask, data)).toEqual("^{F07DC0DA-F0DE-4F09-bcfd-63B36CC46FCF}^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
-			data = mask.apply("{F07DC0DA-F0DE-4F0");
+			data = mask.apply("{F07DC0DA-F0DE-4F0@#");
 			expect(valueOf(mask, data)).toEqual("^{F07DC0DA-F0DE-4F0_-____-____________}^");
 		});
 	});
 
-	describe("Optional places mask", function ()
+	describe("Optional suffix mask", function ()
 	{
 		it("can be defined", function ()
 		{
@@ -267,27 +267,60 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("$_");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("af");
 			expect(valueOf(mask, data)).toEqual("^$_^");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("$23");
 			expect(valueOf(mask, data)).toEqual("^$23^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("a8");
 			expect(valueOf(mask, data)).toEqual("^$8^");
+		});
+	});
+
+	describe("Optional prefix mask", function ()
+	{
+		it("can be defined", function ()
+		{
+			mask = RangerMask.define("~9");
+			expect(mask).toBeDefined();
+			expect(mask).not.toBeNull();
+		});
+
+		it("should have proper masked empty value", function ()
+		{
+			expect(mask.maskedEmptyVal).toEqual("_");
+		});
+
+		it("should apply to an invalid value", function ()
+		{
+			data = mask.apply("af");
+			expect(valueOf(mask, data)).toEqual("^_^");
+		});
+
+		it("should apply to a valid value", function ()
+		{
+			data = mask.apply("-6");
+			expect(valueOf(mask, data)).toEqual("^-6^");
+		});
+
+		it("should apply to a partially valid value", function ()
+		{
+			data = mask.apply("-");
+			expect(valueOf(mask, data)).toEqual("^-_^");
 		});
 	});
 
@@ -300,24 +333,24 @@ describe("RangerMask.define", function ()
 			expect(mask).not.toBeNull();
 		});
 
-		it("should have proper blank value", function ()
+		it("should have proper masked empty value", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("_/_/__");
 		});
 
-		it("should init an invalid value", function ()
+		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("sdgh");
 			expect(valueOf(mask, data)).toEqual("^_/_/__^");
 		});
 
-		it("should init a valid value", function ()
+		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("2/3/1986");
 			expect(valueOf(mask, data)).toEqual("^2/3/1986^");
 		});
 
-		it("should init a partially valid value", function ()
+		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("/48/82");
 			expect(valueOf(mask, data)).toEqual("^_/48/82^");

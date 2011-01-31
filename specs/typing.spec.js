@@ -1,10 +1,15 @@
 /*
 The tests in this section are based around a set of possible contexts.  I context consists of two things,
-where the cursor is relative to fields and separators, and where entered values are around the cursor.
+where the cursor is relative to places, and where entered values are around the cursor.
 
-Cursor positions are ilistrated by the carets in ^{^_^_^_^-^_^}^ but these positions can be simplified
-to only 6 cases like so 1{2_3_4_5-2__6}7.  Those 6 cases are described as:
-1. Before separator
+Since the places before the cursor don't matter, it only matters what follows.  There are three types of places,
+namely fixed, required and optional. Additionally the end of the mask affects typing.  Finally, whether there
+are values in the required an optional places matters.  Thus contexts are described as a comma separated list
+of the places following the cursor. It is assumed no value is present unless the word "value" follow the place.
+
+Cursor positions are illustrated by the carets in ^{^_^_^_^-^$^_^}^ but these positions can be simplified
+to only 6 cases like so 1{2_3_4_5-6$2__7}8.  Those 8 cases are described as:
+1. Before fixed
 2. Before field
 3. Mid field
 4. End of field
@@ -23,117 +28,134 @@ describe("RangerMask.type", function ()
 	var mask;
 	var data;
 
-	describe("Mask {999-9}", function ()
+	describe("Required places", function ()
 	{
 		beforeEach(function ()
 		{
-			mask = RangerMask.define("/{999-9/}");
+			mask = RangerMask.define("999");
+			data = dataFor(mask, "^___");
 		});
 
-		describe("Caret before separator", function ()
+		it("invalid char ignored", function ()
 		{
-			beforeEach(function ()
-			{
-				data = dataFor(mask, "^{___-_}");
-			});
-
-			it("type invalid char doesn't change state", function ()
-			{
-				mask.type(data, "a");
-				expect(valueOf(mask, data)).toEqual("^{___-_}");
-			});
-
-			it("type valid char, goes to next field with caret after", function ()
-			{
-				mask.type(data, "3");
-				expect(valueOf(mask, data)).toEqual("{3^__-_}");
-			});
+			mask.type(data, "a");
+			expect(valueOf(mask, data)).toEqual("^___");
 		});
 
-		describe("Caret mid field", function ()
+		it("valid char accepted, cursor advanced", function ()
 		{
-			beforeEach(function ()
-			{
-				data = dataFor(mask, "{3^__-_}");
-			});
-
-			it("type invalid char doesn't change state", function ()
-			{
-				mask.type(data, "a");
-				expect(valueOf(mask, data)).toEqual("{3^__-_}");
-			});
-
-			it("type valid char, replaces placeholder and puts caret after ", function ()
-			{
-				mask.type(data, "8");
-				expect(valueOf(mask, data)).toEqual("{38^_-_}");
-			});
-		});
-
-		describe("Caret at end of field", function ()
-		{
-			beforeEach(function ()
-			{
-				data = dataFor(mask, "{34^_-_}");
-			});
-
-			it("type invalid char doesn't change state", function ()
-			{
-				mask.type(data, "a");
-				expect(valueOf(mask, data)).toEqual("{34^_-_}");
-			});
-
-			it("type valid char, replaces placeholder and puts caret after ", function ()
-			{
-				mask.type(data, "8");
-				expect(valueOf(mask, data)).toEqual("{348^-_}");
-			});
-		});
-
-		describe("Caret after field", function ()
-		{
-			beforeEach(function ()
-			{
-				data = dataFor(mask, "{345^-_}");
-			});
-
-			it("type invalid char doesn't change state", function ()
-			{
-				mask.type(data, "a");
-				expect(valueOf(mask, data)).toEqual("{345^-_}");
-			});
-
-			it("type valid char, replaces placeholder and puts caret after ", function ()
-			{
-				mask.type(data, "8");
-				expect(valueOf(mask, data)).toEqual("{345-8^}");
-			});
+			mask.type(data, "3");
+			expect(valueOf(mask, data)).toEqual("3^__");
 		});
 	});
 
-	//--------------------------------------------------------------------
 
-	describe("advance on separator", function ()
+	describe("Fixed places", function ()
 	{
-		it("one separator char", function ()
+		beforeEach(function ()
 		{
-			mask = RangerMask.define("/{ /}9.9");
-			data = dataFor(mask, "^{ }_._");
-
-			mask.type(data, "{");
-			expect(valueOf(mask, data)).toEqual("{^ }_._");
+			mask = RangerMask.define("-$9");
+			data = dataFor(mask, "^-$_");
 		});
 
-		it("two separator chars", function ()
+		it("invalid char ignored", function ()
 		{
-			mask.type(data, "}");
-			expect(valueOf(mask, data)).toEqual("{ }^_._");
+			mask.type(data, "a");
+			expect(valueOf(mask, data)).toEqual("^-$_");
 		});
 
-		it("to next field", function ()
+		it("fixed char advances cursor", function ()
 		{
-			mask.type(data, ".");
-			expect(valueOf(mask, data)).toEqual("{ }_.^_");
+			mask.type(data, "-");
+			expect(valueOf(mask, data)).toEqual("-^$_");
+		});
+
+		it("fixed char seeks through fixed places", function ()
+		{
+			mask.type(data, "$");
+			expect(valueOf(mask, data)).toEqual("-$^_");
+		});
+
+		it("char valid for place after fixed places types", function ()
+		{
+			mask.type(data, "5");
+			expect(valueOf(mask, data)).toEqual("-$5^");
+		});
+	});
+
+	describe("Optional places", function ()
+	{
+		beforeEach(function ()
+		{
+			mask = RangerMask.define("a~a99");
+			data = dataFor(mask, "^__");
+		});
+
+		it("invalid char ignored", function ()
+		{
+			mask.type(data, "$");
+			expect(valueOf(mask, data)).toEqual("^__");
+		});
+
+		it("valid char accepted, cursor advanced", function ()
+		{
+			mask.type(data, "f");
+			expect(valueOf(mask, data)).toEqual("f^__");
+		});
+
+		it("char valid for next place accepted, cursor advanced", function ()
+		{
+			mask.type(data, "-");
+			expect(valueOf(mask, data)).toEqual("-^__");
+		});
+
+		it("char valid after optional places accepted, cursor advanced", function ()
+		{
+			mask.type(data, "9");
+			expect(valueOf(mask, data)).toEqual("9^_");
+		});
+	});
+
+	describe("End of mask", function ()
+	{
+		beforeEach(function ()
+		{
+			mask = RangerMask.define("99");
+			data = dataFor(mask, "84^");
+		});
+
+		it("ignores typing", function ()
+		{
+			mask.type(data, "a");
+			mask.type(data, "5");
+			expect(valueOf(mask, data)).toEqual("84^");
+		});
+	});
+
+	describe("Seeking (moving cursor to fixed places)", function ()
+	{
+		beforeEach(function ()
+		{
+			mask = RangerMask.define("$99a-$99a//9");
+			data = dataFor(mask, "$^__-$__/_");
+		});
+
+		it("should seek across required and optional places", function ()
+		{
+			mask.type(data, "-");
+			expect(valueOf(mask, data)).toEqual("$__-^$__/_");
+		});
+
+		it("should seek across required, optional and fixed places", function ()
+		{
+			mask.type(data, "$");
+			expect(valueOf(mask, data)).toEqual("$__-$^__/_");
+		});
+
+		it("should NOT seek beyond end of fixed places", function ()
+		{
+			mask.type(data, "/");
+			expect(valueOf(mask, data)).toEqual("$^__-$__/_");
 		});
 	});
 });

@@ -5,13 +5,13 @@ String.prototype.insertAt = function (index, value)
 
 function valueOf(mask, data)
 {
-	var value = mask.maskedVal(data);
-	var selection = mask.selectionInMasked(data);
-	var selectionEnd = selection.start + selection.length;
-	if(selectionEnd != selection.start)
+	var state = mask.maskedState(data);
+	var value = state.value;
+	var selectionEnd = state.selection.start + state.selection.length;
+	if(selectionEnd != state.selection.start)
 		value = value.insertAt(selectionEnd, "^");
 
-	value = value.insertAt(selection.start, "^");
+	value = value.insertAt(state.selection.start, "^");
 	return value;
 }
 
