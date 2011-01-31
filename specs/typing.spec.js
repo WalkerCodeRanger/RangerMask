@@ -27,7 +27,7 @@ describe("RangerMask.type", function ()
 	{
 		beforeEach(function ()
 		{
-			mask = RangerMask.define("{999-9}");
+			mask = RangerMask.define("/{999-9/}");
 		});
 
 		describe("Caret before separator", function ()
@@ -117,7 +117,7 @@ describe("RangerMask.type", function ()
 	{
 		it("one separator char", function ()
 		{
-			mask = RangerMask.define("{ }9.9");
+			mask = RangerMask.define("/{ /}9.9");
 			data = dataFor(mask, "^{ }_._");
 
 			mask.type(data, "{");
