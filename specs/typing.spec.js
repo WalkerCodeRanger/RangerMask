@@ -201,6 +201,4 @@ describe("RangerMask.type", function ()
 			expect(valueOf(mask, data)).toEqual("__-_^7");
 		});
 	});
-
-	// TODO pushing
 });

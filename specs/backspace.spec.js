@@ -52,4 +52,25 @@ describe("RangerMask.backspace", function ()
 		mask.backspace(data);
 		expect(valueOf(mask, data)).toEqual("___-__-456^_");
 	});
+
+	it("should move back a place through empty required fields", function ()
+	{
+		data = dataFor(mask, "___-__^-4568");
+		mask.backspace(data);
+		expect(valueOf(mask, data)).toEqual("___-_^4-5_68");
+	});
+
+	it("should not pull when placeholders between cursor and chars", function ()
+	{
+		data = dataFor(mask, "___-_^_-4568");
+		mask.backspace(data);
+		expect(valueOf(mask, data)).toEqual("___-^__-4568");
+	});
+
+	it("should not pull when placeholders between chars", function ()
+	{
+		data = dataFor(mask, "_^45-6_-4___");
+		mask.backspace(data);
+		expect(valueOf(mask, data)).toEqual("^456-__-4___"");
+	});
 });

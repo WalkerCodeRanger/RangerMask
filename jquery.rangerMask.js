@@ -230,7 +230,20 @@ var RangerMask = {};
 
 	Mask.prototype.del = function (data)
 	{
-		// TODO Not Yet Implemented
+		if(data.selection.length > 0)
+			this.deleteSelection(data);
+		else
+		// Find the first delete-able char ahead of the cursor
+			for(var i=data.selection.start; i < this.places.length; i++)
+			{
+				var place = this.places[i];
+				if(!place.fixed && (place.val(data) != "" || !place.optional))
+				{
+					this.places[i].del(data);
+					data.selection.start = i;
+					break;
+				}
+			}
 	}
 
 	// Class Place
@@ -316,13 +329,18 @@ var RangerMask = {};
 	Place.prototype.peekPull = function(data)
 	{
 		var val = this.val(data);
-		if(this.optional && val == "")
+		if(val == "")
 		{
-			val = this.next.peekPull(data);
-			if(this.regEx.test(val))
-				return val; // Do a pull across this place
+			if(this.optional)
+			{
+				val = this.next.peekPull(data);
+				if(this.regEx.test(val))
+					return val; // Do a pull across this place
+				else
+					return "";
+			}
 			else
-				return "";
+				return ""; // Empty required places stop the pull
 		}
 		else
 			return val;
@@ -331,6 +349,10 @@ var RangerMask = {};
 	// Tells us our value has been pulled, we will now try to pull our next
 	Place.prototype.pull = function(data)
 	{
+		// Empty required places stop the pull
+		if(!this.optional && this.val(data) == "")
+			return;
+
 		var val = this.next.peekPull(data);
 		if(val == "" || this.regEx.test(val))
 		{
@@ -589,13 +611,20 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 		})
 		.bind("keydown.rangerMask", function (e)
 		{
-			if(e.which == 8)
+			switch(e.which)
 			{
-				var element = $(this);
-				var data = getData(element, mask);
-				mask.backspace(data, data);
-				setState(element, mask.maskedState(data));
-				return false;
+				case 8:
+					var element = $(this);
+					var data = getData(element, mask);
+					mask.backspace(data, data);
+					setState(element, mask.maskedState(data));
+					return false;
+				case 46:
+					var element = $(this);
+					var data = getData(element, mask);
+					mask.del(data, data);
+					setState(element, mask.maskedState(data));
+					return false;
 			}
 		})
 		.bind("keypress.rangerMask", function (e)
