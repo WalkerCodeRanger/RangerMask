@@ -159,5 +159,48 @@ describe("RangerMask.type", function ()
 		});
 	});
 
+	describe("Pushing (move chars to the right to make room for a char being typed)", function ()
+	{
+		beforeEach(function ()
+		{
+			mask = RangerMask.define("99#-9a9");
+		});
+
+		it("should push into required place", function ()
+		{
+			data = dataFor(mask, "^1_-__");
+			mask.type(data, "2");
+			expect(valueOf(mask, data)).toEqual("2^1-__");
+		});
+
+		it("should push into optional place", function ()
+		{
+			data = dataFor(mask, "^21-__");
+			mask.type(data, "3");
+			expect(valueOf(mask, data)).toEqual("3^21-__");
+		});
+
+		it("should push across fixed place", function ()
+		{
+			data = dataFor(mask, "^321-__");
+			mask.type(data, "4");
+			expect(valueOf(mask, data)).toEqual("4^32-1_");
+		});
+
+		it("should not be allowed when char does go into pushed place", function ()
+		{
+			data = dataFor(mask, "__-^7_");
+			mask.type(data, "6");
+			expect(valueOf(mask, data)).toEqual("__-^7_");
+		});
+
+		it("should not be allowed to push past end", function ()
+		{
+			data = dataFor(mask, "__-_^7");
+			mask.type(data, "3");
+			expect(valueOf(mask, data)).toEqual("__-_^7");
+		});
+	});
+
 	// TODO pushing
 });

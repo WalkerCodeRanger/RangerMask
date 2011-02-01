@@ -301,7 +301,15 @@ var RangerMask = {};
 
 	Place.prototype.push = function(data, char)
 	{
-		return false; // TODO Not Implememented
+		if(this.regEx.test(char))
+		{
+			if(this.val(data) == "" || this.next.push(data, this.val(data)))
+			{
+				this.val(data, char);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// Returns the value that will be pulled, if the puller can pull it, he calls pull()
@@ -392,7 +400,7 @@ var RangerMask = {};
 
 	FixedPlace.prototype.push = function(data, char)
 	{
-		return false; // TODO Not Implememented
+		return this.next.push(data, char);
 	};
 
 	FixedPlace.prototype.peekPull = function(data)
