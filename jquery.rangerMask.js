@@ -7,27 +7,27 @@ Version: 0.1.0
 */
 
 /*
-Features To Do:
-	paste
-	tab in
-	shift-tab in
+Version 1.0 Features:
+	tab in/out
+	shift-tab in/out
 	mouse click in
 	mouse select range
-	optional parts i.e. phone extension or for zip+4
+	optional parts i.e. phone extension or for zip+4 (way to show optional areas, i.e. zip+4 as _____-____ where the -____ disappears on blur)
 	optional negative sign
 	handle things like , in currency
 	Ways to handle defaulted parts so "1/1"->"1/1/2011" etc?
-	delete
-	backspace
-	
+
+Version 1.1 Features:
+
+
 Possible Features:
+	char classes?
 	right to left places
 	context around a place allowing for more control (i.e. 61 is not a valid month)
 	empty display? ie. show " / / " for dates but grayed out
 	good way to do am/pm
 	functions for handling events
 	empty string mask? // Not needed becuase of optional
-	way to show optional areas, i.e. zip+4 as _____-____ where the -____ disappears on blur
 	ctrl+backspace backspaces to the begining of the word
 	alt+backspace is undo?
 	ctrl+delete it delete to end of word?
@@ -300,8 +300,7 @@ var RangerMask = {};
 		else if(this.optional)
 			return this.next.type(data, char);
 		else
-			return this.next.seek(data, char, false); // TODO seems like there is more to it than this
-														// i.e. if we are optional then we could type next
+			return this.next.seek(data, char, false);
 	}
 
 	Place.prototype.seek = function(data, char, fixedPlaceFound)
@@ -527,14 +526,18 @@ RangerMask.addDef("yyyy").place("0-9", true).place("0-9", true).place("0-9", tru
 RangerMask.addDef("yyYY").place("0-9", false).place("0-9", false).place("0-9", true).place("0-9", true);
 
 // Reserve some characters for future use
-RangerMask.addDef("<");
+RangerMask.addDef("<"); // Left and right align
 RangerMask.addDef(">");
-RangerMask.addDef("(");
+RangerMask.addDef("("); // Optional? i.e. zip+4 99999(-9999) which would mask as _____-____
 RangerMask.addDef(")");
-RangerMask.addDef("["); // optional? char class?
+RangerMask.addDef("["); // Char Class?
 RangerMask.addDef("]");
-RangerMask.addDef("{");
+RangerMask.addDef("{"); // Repetition?
 RangerMask.addDef("}");
+// ? // optional
+// * // 0 or more
+// Note: with repetition, optional and zero or more, it would be possible to have only requred template char classes and modify them in the mask
+RangerMask.addDef("|"); // Block pull/push?
 
 // Define standard masks
 RangerMask.zip = RangerMask.define("99999");
@@ -607,6 +610,18 @@ RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 			element.data("rangerMaskData", data);
 
+			element.val(mask.state(data).value);
+		})
+		.bind("focus.rangerMask", function (e)
+		{
+			var element = $(this);
+			var data = getData(element, mask);
+			element.val(mask.maskedState(data).value);
+		})
+		.bind("blur.rangerMask", function (e)
+		{
+			var element = $(this);
+			var data = getData(element, mask);
 			element.val(mask.state(data).value);
 		})
 		.bind("keydown.rangerMask", function (e)
