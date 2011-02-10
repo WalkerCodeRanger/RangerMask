@@ -507,9 +507,10 @@ var RangerMask = {};
 			else if(pattern.indexOf("?") == 0)
 			{
 				// TODO check for null lastDef
+				mask.places = mask.places.slice(0, -lastDef.length); // remove last def from places
 				$.each(lastDef, function(i, place)
 				{
-					mask.places[mask.places.indexOf(place)] = place.copyAsPlace(true);
+					mask.places.push(place.copyAsPlace(true));
 				});
 				pattern = pattern.substr(1);
 			}
@@ -579,7 +580,7 @@ RangerMask.addDef("|"); // Block pull/push?
 // Define standard masks
 RangerMask.zip = RangerMask.define("9{5}");
 RangerMask.zip4 = RangerMask.define("9{5}-9{0,4}");
-RangerMask.ssn = RangerMask.define("9999-99-9999");
+RangerMask.ssn = RangerMask.define("999-99-9999");
 RangerMask.ein = RangerMask.define("99-999999");
 RangerMask.ip = RangerMask.define("9?9?0.9?9?0.9?9?0.9?9?0");
 RangerMask.ip6 = RangerMask.define("x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}");
@@ -663,15 +664,16 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		})
 		.bind("keydown.rangerMask", function (e)
 		{
+			// In IE these chars don't send keypress
 			switch(e.which)
 			{
-				case 8:
+				case 8: // Backspace
 					var element = $(this);
 					var data = getData(element, mask);
 					mask.backspace(data, data);
 					setState(element, mask.maskedState(data));
 					return false;
-				case 46:
+				case 46: // Delete
 					var element = $(this);
 					var data = getData(element, mask);
 					mask.del(data, data);
@@ -681,7 +683,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		})
 		.bind("keypress.rangerMask", function (e)
 		{
-			if(e.ctrlKey || e.altKey || e.metaKey)
+			if(e.ctrlKey || e.altKey || e.metaKey || e.which < 32)
 				return true;
 			if((32 <= e.which && e.which <= 126) || e.which >= 128) // If typeable char
 			{

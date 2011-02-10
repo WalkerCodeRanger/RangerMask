@@ -6,16 +6,18 @@
 	<script type="text/javascript" src="jquery.rangerMask.js" ></script>
 </head>
 <body>
-<input type="text" value="left" />
-<input id="test" type="text" value="" maxlength=11 />
-<input type="text" value="right" /><br />
-
+<table>
+<tr><td></td><td><input type="text" value="before" /></td></tr>
+<tr><td>SSN:</td><td><input id="ssn" type="text" value="" maxlength=11 /> 999-99-9999<br /></td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><td></td><td><input type="text" value="after" /></td></tr>
+</table>
 
 <script type="text/javascript" language="javascript">
 	$(document).ready(function ()
 	{
-		var test = $("#test");
-		test.rangerMask(RangerMask.ssn);
+		$("#ssn").rangerMask(RangerMask.ssn);
 	});
 </script>
 </body>
