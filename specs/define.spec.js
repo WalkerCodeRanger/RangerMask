@@ -64,7 +64,7 @@ describe("RangerMask.define", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define("A");
+			mask = RangerMask.define("a");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -97,7 +97,7 @@ describe("RangerMask.define", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define("AA9");
+			mask = RangerMask.define("aa9");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -229,7 +229,7 @@ describe("RangerMask.define", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define("/{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX/}");
+			mask = RangerMask.define("/{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/}");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -262,7 +262,7 @@ describe("RangerMask.define", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define("$9##");
+			mask = RangerMask.define("$99?9?");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -295,7 +295,7 @@ describe("RangerMask.define", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define("~9");
+			mask = RangerMask.define("-?9");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -354,6 +354,105 @@ describe("RangerMask.define", function ()
 		{
 			data = mask.apply("/48/82");
 			expect(valueOf(mask, data)).toEqual("^_/48/82^");
+		});
+
+		describe("Simple repeat mask", function ()
+		{
+			it("can be defined", function ()
+			{
+				mask = RangerMask.define("a9{5}");
+				expect(mask).toBeDefined();
+				expect(mask).not.toBeNull();
+			});
+
+			it("should have proper masked empty value", function ()
+			{
+				expect(mask.maskedEmptyVal).toEqual("______");
+			});
+
+			it("should apply to an invalid value", function ()
+			{
+				data = mask.apply("$#@");
+				expect(valueOf(mask, data)).toEqual("^______^");
+			});
+
+			it("should apply to a valid value", function ()
+			{
+				data = mask.apply("g34625");
+				expect(valueOf(mask, data)).toEqual("^g34625^");
+			});
+
+			it("should apply to a partially valid value", function ()
+			{
+				data = mask.apply("g4r5");
+				expect(valueOf(mask, data)).toEqual("^g45___^");
+			});
+		});
+
+		describe("Repeat {min,max} mask", function ()
+		{
+			it("can be defined", function ()
+			{
+				mask = RangerMask.define("a9{2,3}");
+				expect(mask).toBeDefined();
+				expect(mask).not.toBeNull();
+			});
+
+			it("should have proper masked empty value", function ()
+			{
+				expect(mask.maskedEmptyVal).toEqual("___");
+			});
+
+			it("should apply to an invalid value", function ()
+			{
+				data = mask.apply("$#@");
+				expect(valueOf(mask, data)).toEqual("^___^");
+			});
+
+			it("should apply to a valid value", function ()
+			{
+				data = mask.apply("g343");
+				expect(valueOf(mask, data)).toEqual("^g343^");
+			});
+
+			it("should apply to a partially valid value", function ()
+			{
+				data = mask.apply("g4r$");
+				expect(valueOf(mask, data)).toEqual("^g4_^");
+			});
+		});
+
+		describe("Repeat fixed place mask", function ()
+		{
+			it("can be defined", function ()
+			{
+				mask = RangerMask.define("aa!{0,10}");
+				expect(mask).toBeDefined();
+				expect(mask).not.toBeNull();
+			});
+
+			it("should have proper masked empty value", function ()
+			{
+				expect(mask.maskedEmptyVal).toEqual("__");
+			});
+
+			it("should apply to an invalid value", function ()
+			{
+				data = mask.apply("$#@");
+				expect(valueOf(mask, data)).toEqual("^__^");
+			});
+
+			it("should apply to a valid value", function ()
+			{
+				data = mask.apply("fe!!!!!!");
+				expect(valueOf(mask, data)).toEqual("^fe!!!!!!^");
+			});
+
+			it("should apply to a partially valid value", function ()
+			{
+				data = mask.apply("h4r2!!4!");
+				expect(valueOf(mask, data)).toEqual("^hr!!!^");
+			});
 		});
 	});
 });

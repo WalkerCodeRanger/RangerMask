@@ -13,7 +13,6 @@ Version 1.0 Features:
 	mouse click in
 	mouse select range
 	optional parts i.e. phone extension or for zip+4 (way to show optional areas, i.e. zip+4 as _____-____ where the -____ disappears on blur)
-	optional negative sign
 	handle things like , in currency
 	Ways to handle defaulted parts so "1/1"->"1/1/2011" etc?
 
@@ -27,7 +26,7 @@ Possible Features:
 	empty display? ie. show " / / " for dates but grayed out
 	good way to do am/pm
 	functions for handling events
-	empty string mask? // Not needed becuase of optional
+	empty string placeholder? // May not be needed becuase of optional
 	ctrl+backspace backspaces to the begining of the word
 	alt+backspace is undo?
 	ctrl+delete it delete to end of word?
@@ -247,10 +246,10 @@ var RangerMask = {};
 	}
 
 	// Class Place
-	function Place(charClass, optional, defaultFill)
+	function Place(charClass, defaultFill, optional)
 	{
 		this.fixed = false;
-		this.optional = optional;
+		this.optional = optional || false;
 		this.charClass = charClass;
 		this.defaultFill = defaultFill;
 		this.emptyVal = "";
@@ -259,7 +258,12 @@ var RangerMask = {};
 
 	Place.prototype.clone = function()
 	{
-		return new Place(this.charClass, this.optional, this.defaultFill);
+		return new Place(this.charClass, this.defaultFill, this.optional);
+	}
+
+	Place.prototype.copyAsPlace = function(optional)
+	{
+		return new Place(this.charClass, this.defaultFill, optional);
 	}
 
 	Place.prototype.init = function ()
@@ -383,6 +387,11 @@ var RangerMask = {};
 		this.maskedEmptyVal = value;
 	};
 
+	FixedPlace.prototype.copyAsPlace = function(optional)
+	{
+		return new Place("\\"+this.value, undefined, optional);
+	}
+
 	FixedPlace.prototype.init = function ()
 	{
 	};
@@ -445,9 +454,9 @@ var RangerMask = {};
 		this.places = places;
 	}
 
-	PlaceBuilder.prototype.place = function(charClass, optional, defaultFill)
+	PlaceBuilder.prototype.place = function(charClass, defaultFill, optional)
 	{
-		this.places.push(new Place(charClass, optional, defaultFill));
+		this.places.push(new Place(charClass, defaultFill, optional));
 		return this;
 	}
 
@@ -479,16 +488,51 @@ var RangerMask = {};
 		if(options && options.placeholder)
 			mask.placeholder = options.placeholder;
 
+		var lastDef = null;
+
 		while(pattern.length > 0)
 		{
 			var definition = startsWithDefinition(pattern, rmask.definitions);
 			if(definition)
 			{
+				lastDef = [];
 				$.each(rmask.definitions[definition], function(i, place)
 				{
-					mask.places.push(place.clone());
+					var placeClone = place.clone();
+					lastDef.push(placeClone);
+					mask.places.push(placeClone);
 				});
 				pattern = pattern.substr(definition.length);
+			}
+			else if(pattern.indexOf("?") == 0)
+			{
+				// TODO check for null lastDef
+				$.each(lastDef, function(i, place)
+				{
+					mask.places[mask.places.indexOf(place)] = place.copyAsPlace(true);
+				});
+				pattern = pattern.substr(1);
+			}
+			else if(pattern.indexOf("{") == 0)
+			{
+				var repeatPattern = pattern.slice(0, pattern.indexOf("}")+1);
+				pattern = pattern.substr(repeatPattern.length);
+				repeatPattern = repeatPattern.slice(1, -1);
+				var parts = repeatPattern.split(",");
+				var min = parseInt(parts[0]);
+				var max = min;
+				if(parts.length == 2)
+					max = parseInt(parts[1]);
+				
+				mask.places = mask.places.slice(0, -lastDef.length); // remove last def from places
+				for(var i=0; i<max; i++)
+				{
+					var optional = i >= min;
+					$.each(lastDef, function(i, place)
+					{
+						mask.places.push(place.copyAsPlace(optional));
+					});
+				}
 			}
 			else
 			{
@@ -496,7 +540,10 @@ var RangerMask = {};
 				if(pattern.indexOf("/") == 0) // i.e. pattern.startsWith("/")
 					pattern = pattern.substr(1);
 
-				mask.places.push(new FixedPlace(pattern.substr(0, 1)));
+				var fixedPlace = new FixedPlace(pattern.substr(0, 1));
+
+				lastDef = [fixedPlace];
+				mask.places.push(fixedPlace);
 				pattern = pattern.substr(1);
 			}
 		}
@@ -507,23 +554,17 @@ var RangerMask = {};
 })(RangerMask);
 
 // Add standard definitions
-RangerMask.addDef("~").place("-", true); // optional minus sign
-RangerMask.addDef("0").place("0-9", false, "0"); // TODO test and implement default fill
-RangerMask.addDef("9").place("0-9", false);
-RangerMask.addDef("#").place("0-9", true);
-RangerMask.addDef("x").place("A-Fa-f0-9", true);
-RangerMask.addDef("X").place("A-Fa-f0-9", false);
-RangerMask.addDef("a").place("A-Za-z", true); // TODO support for non ascii?
-RangerMask.addDef("A").place("A-Za-z", false);
-RangerMask.addDef("*").place("A-Za-z0-9", true);
-RangerMask.addDef("?").place("A-Za-z0-9", false); // TODO maybe the ? is needed for optional fixed places
-RangerMask.addDef("mm").place("1-9", false).place("0-9", true);
-RangerMask.addDef("MM").place("0-9", false, "0").place("0-9", false);
-RangerMask.addDef("dd").place("1-9", false).place("0-9", true); // TODO allow lookahead and behind expressions to create better validation?
-RangerMask.addDef("DD").place("0-9", false, "0").place("0-9", false);
-RangerMask.addDef("yy").place("0-9", false).place("0-9", true);
-RangerMask.addDef("yyyy").place("0-9", true).place("0-9", true).place("0-9", true).place("0-9", true);
-RangerMask.addDef("yyYY").place("0-9", false).place("0-9", false).place("0-9", true).place("0-9", true);
+RangerMask.addDef("0").place("0-9", "0"); // TODO test and implement default fill
+RangerMask.addDef("9").place("0-9");
+RangerMask.addDef("x").place("A-Fa-f0-9");
+RangerMask.addDef("a").place("A-Za-z");
+RangerMask.addDef("mm").place("1-9").place("0-9", null, true);
+RangerMask.addDef("MM").place("0-9", "0").place("0-9");
+RangerMask.addDef("dd").place("1-9").place("0-9", null, true); // TODO allow lookahead and behind expressions to create better validation?
+RangerMask.addDef("DD").place("0-9", "0").place("0-9");
+RangerMask.addDef("yy").place("0-9").place("0-9", true);
+RangerMask.addDef("yyyy").place("0-9", null, true).place("0-9", null, true).place("0-9", null, true).place("0-9", null, true);
+RangerMask.addDef("yyYY").place("0-9").place("0-9").place("0-9", null, true).place("0-9", null, true);
 
 // Reserve some characters for future use
 RangerMask.addDef("<"); // Left and right align
@@ -532,22 +573,18 @@ RangerMask.addDef("("); // Optional? i.e. zip+4 99999(-9999) which would mask as
 RangerMask.addDef(")");
 RangerMask.addDef("["); // Char Class?
 RangerMask.addDef("]");
-RangerMask.addDef("{"); // Repetition?
-RangerMask.addDef("}");
-// ? // optional
-// * // 0 or more
-// Note: with repetition, optional and zero or more, it would be possible to have only requred template char classes and modify them in the mask
+RangerMask.addDef("*"); // 0 or more
 RangerMask.addDef("|"); // Block pull/push?
 
 // Define standard masks
-RangerMask.zip = RangerMask.define("99999");
-RangerMask.zip4 = RangerMask.define("99999-####");
-RangerMask.ssn = RangerMask.define("999-99-9999");
+RangerMask.zip = RangerMask.define("9{5}");
+RangerMask.zip4 = RangerMask.define("9{5}-9{0,4}");
+RangerMask.ssn = RangerMask.define("9999-99-9999");
 RangerMask.ein = RangerMask.define("99-999999");
-RangerMask.ip = RangerMask.define("##0.##0.##0.##0");
-RangerMask.ip6 = RangerMask.define("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx");
-RangerMask.guid = RangerMask.define("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
-RangerMask.guidBraced = RangerMask.define("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}");
+RangerMask.ip = RangerMask.define("9?9?0.9?9?0.9?9?0.9?9?0");
+RangerMask.ip6 = RangerMask.define("x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}:x{0,4}");
+RangerMask.guid = RangerMask.define("x{8}-x{4}-x{4}-x{4}-x{12}");
+RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 
 (function ($)
 {

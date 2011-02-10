@@ -87,7 +87,7 @@ describe("RangerMask.type", function ()
 	{
 		beforeEach(function ()
 		{
-			mask = RangerMask.define("a~a99");
+			mask = RangerMask.define("a?-?a?99");
 			data = dataFor(mask, "^__");
 		});
 
@@ -136,7 +136,7 @@ describe("RangerMask.type", function ()
 	{
 		beforeEach(function ()
 		{
-			mask = RangerMask.define("$99a-$99a//9");
+			mask = RangerMask.define("$99a?-$99a?//9");
 			data = dataFor(mask, "$^__-$__/_");
 		});
 
@@ -163,7 +163,7 @@ describe("RangerMask.type", function ()
 	{
 		beforeEach(function ()
 		{
-			mask = RangerMask.define("99#-9a9");
+			mask = RangerMask.define("999?-9a?9");
 		});
 
 		it("should push into required place", function ()

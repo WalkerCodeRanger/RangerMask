@@ -1,6 +1,6 @@
 describe("RangerMask.del", function ()
 {
-	var mask = RangerMask.define("999-99-99aa99");
+	var mask = RangerMask.define("999-99-99a?a?99");
 	var data;
 
 	it("should delete a selection", function ()
