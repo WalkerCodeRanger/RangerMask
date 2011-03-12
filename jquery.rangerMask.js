@@ -1,39 +1,12 @@
 /*
-RangerMask
-Masked Input plugin for jQuery
-Copyright (c) 2010 Jeffery Walker (WalkerCodeRanger.com)
-Licensed under ...
-Version: 0.1.0
-*/
-
-/*
-Version 1.0 Features:
-	tab in/out
-	shift-tab in/out
-	mouse click in
-	mouse select range
-	optional parts i.e. phone extension or for zip+4 (way to show optional areas, i.e. zip+4 as _____-____ where the -____ disappears on blur)
-	handle things like , in currency
-	Ways to handle defaulted parts so "1/1"->"1/1/2011" etc?
-
-Version 1.1 Features:
-
-
-Possible Features:
-	char classes?
-	right to left places
-	context around a place allowing for more control (i.e. 61 is not a valid month)
-	empty display? ie. show " / / " for dates but grayed out
-	good way to do am/pm
-	functions for handling events
-	empty string placeholder? // May not be needed becuase of optional
-	ctrl+backspace backspaces to the begining of the word
-	alt+backspace is undo?
-	ctrl+delete it delete to end of word?
-
-Developer Notes:
-	Please note that places includes the final null place which always has the value ""
-*/
+ * RangerMask
+ * https://github.com/WalkerCodeRanger/RangerMask
+ * 
+ * Masked Input plugin for jQuery
+ * Copyright (c) 2011 Jeff Walker, http://WalkerCodeRanger.com
+ * Licensed under MIT license.
+ * Version: 0.1.0
+ */
 
 // Namespace
 var RangerMask = {};
