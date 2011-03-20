@@ -1,6 +1,6 @@
 describe("RangerMask.backspace", function ()
 {
-	var mask = RangerMask.define("999-99-99aa99");
+	var mask = RangerMask.define("999-99-99a?a?99");
 	var data;
 
 	it("should delete a selection", function ()
@@ -71,6 +71,6 @@ describe("RangerMask.backspace", function ()
 	{
 		data = dataFor(mask, "_^45-6_-4___");
 		mask.backspace(data);
-		expect(valueOf(mask, data)).toEqual("^456-__-4___"");
+		expect(valueOf(mask, data)).toEqual("^456-__-4___");
 	});
 });

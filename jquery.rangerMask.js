@@ -45,6 +45,7 @@ var RangerMask = {};
 		emptyVal: "",
 		maskedEmptyVal: "",
 		val: function() { return ""; },
+		displayVal: function () { return ""; },
 		maskedVal: function () { return ""; },
 		type: function() { return false; },
 		push: function() { return false; },
@@ -60,6 +61,10 @@ var RangerMask = {};
 		this.regEx = null;
 		this.places = [];
 		this.placeholder = "_";
+		this.onEnterMask = null;
+		this.onExitMask = null;
+		this.displayPlaceholder = "\u3000";
+		this.showMaskWhenEmpty = true;
 	}
 
 	Mask.prototype.state = function (data)
@@ -67,6 +72,19 @@ var RangerMask = {};
 		var value = data.places.join("");
 		var start = data.places.slice(0, data.selection.start).join("").length;
 		var length = data.places.slice(0, data.selection.start + data.selection.length).join("").length - start;
+		return { value: value, selection: { start: start, length: length }};
+	}
+
+	
+	Mask.prototype.displayState = function (data)
+	{
+		if(!this.showMaskWhenEmpty && this.isEmpty(data))
+			return { value: "", selection: { start: 0, length: 0 }};
+
+		var displayPlaces = $.map(this.places, function(place, i) { return place.displayVal(data); });
+		var value = displayPlaces.join("");
+		var start = displayPlaces.slice(0, data.selection.start).join("").length;
+		var length = displayPlaces.slice(0, data.selection.start + data.selection.length).join("").length - start;
 		return { value: value, selection: { start: start, length: length }};
 	}
 
@@ -101,6 +119,15 @@ var RangerMask = {};
 		// now that places are inited, we can build our regEx etc.
 		this.regEx = new RegExp("^" + $.map(this.places, function (p) { return "(" + p.pattern + ")"; }).join("") + "$");
 		this.maskedEmptyVal = $.map(this.places, function (p) { return p.maskedEmptyVal; }).join("");
+	}
+
+	Mask.prototype.isEmpty = function (data)
+	{
+		for(var i=0; i<this.places.length; i++)
+			if(!this.places[i].fixed && data.places[i] != "")
+				return false;
+
+		return true;
 	}
 
 	Mask.prototype.selectAll = function (data)
@@ -253,6 +280,15 @@ var RangerMask = {};
 			data.places[this.index] = value;
 	}
 
+	Place.prototype.displayVal = function(data)
+	{
+		var val = this.val(data);
+		if(val != "" || this.optional)
+			return val;
+		else
+			return this.mask.displayPlaceholder;
+	}
+
 	Place.prototype.maskedVal = function(data)
 	{
 		var val = this.val(data);
@@ -323,10 +359,10 @@ var RangerMask = {};
 	}
 
 	// Tells us our value has been pulled, we will now try to pull our next
-	Place.prototype.pull = function(data)
+	Place.prototype.pull = function(data, first)
 	{
-		// Empty required places stop the pull
-		if(!this.optional && this.val(data) == "")
+		// Empty required places stop the pull (except the first could be a delete at en empty place)
+		if(!first && !this.optional && this.val(data) == "")
 			return;
 
 		var val = this.next.peekPull(data);
@@ -334,7 +370,7 @@ var RangerMask = {};
 		{
 			if(!this.optional || this.val(data) != "") // We are not doing a pull across
 				this.val(data, val);
-			this.next.pull(data);
+			this.next.pull(data, false);
 			return;
 		}
 
@@ -344,7 +380,7 @@ var RangerMask = {};
 	Place.prototype.del = function (data)
 	{
 		if(!this.optional)
-			this.pull(data);
+			this.pull(data, true);
 		else
 			this.val(data, "");
 	}
@@ -370,6 +406,12 @@ var RangerMask = {};
 	};
 
 	FixedPlace.prototype.val = function(data)
+	{
+		return this.value;
+	}
+
+	
+	FixedPlace.prototype.displayVal = function(data)
 	{
 		return this.value;
 	}
@@ -411,9 +453,9 @@ var RangerMask = {};
 		return this.next.peekPull(data); // pull across fixed places
 	}
 
-	FixedPlace.prototype.pull = function(data)
+	FixedPlace.prototype.pull = function(data, first)
 	{
-		this.next.pull(data); // pull across fixed places
+		this.next.pull(data, false); // pull across fixed places
 	}
 
 	FixedPlace.prototype.del = function (data)
@@ -458,8 +500,19 @@ var RangerMask = {};
 	{
 		var mask = new Mask();
 
-		if(options && options.placeholder)
-			mask.placeholder = options.placeholder;
+		if(options)
+		{
+			if(typeof options.placeholder == "string")
+				mask.placeholder = options.placeholder;
+			if(typeof options.onEnterMask == "function")
+				mask.onEnterMask = options.onEnterMask;
+			if(typeof options.onExitMask == "function")
+				mask.onExitMask = options.onExitMask;
+			if(typeof options.displayPlaceholder == "string")
+				mask.displayPlaceholder = options.displayPlaceholder;
+			if(typeof options.showMaskWhenEmpty == "boolean")
+				mask.showMaskWhenEmpty = options.showMaskWhenEmpty;
+		}
 
 		var lastDef = null;
 
@@ -621,19 +674,25 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 
 			element.data("rangerMaskData", data);
 
-			element.val(mask.state(data).value);
+			element.val(mask.displayState(data).value);
 		})
 		.bind("focus.rangerMask", function (e)
 		{
 			var element = $(this);
+			if(mask.onEnterMask)
+				mask.onEnterMask(e, element);
+
 			var data = getData(element, mask);
-			element.val(mask.maskedState(data).value);
+			setState(element, mask.maskedState(data));
 		})
 		.bind("blur.rangerMask", function (e)
 		{
 			var element = $(this);
 			var data = getData(element, mask);
-			element.val(mask.state(data).value);
+			element.val(mask.displayState(data).value);
+
+			if(mask.onExitMask)
+				mask.onExitMask(e, element);
 		})
 		.bind("keydown.rangerMask", function (e)
 		{

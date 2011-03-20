@@ -9,15 +9,56 @@
 <table>
 <tr><td></td><td><input type="text" value="before" /></td></tr>
 <tr><td>SSN:</td><td><input id="ssn" type="text" value="" maxlength=11 /> 999-99-9999<br /></td></tr>
-<tr><td></td></tr>
-<tr><td></td></tr>
+<tr><td></td><td><input type="text" value="between" /></td></tr>
+<tr><td>  $:</td><td><input id="currency" type="text" value="" maxlength=13 /> $9{0,9}.99<br /></td></tr>
 <tr><td></td><td><input type="text" value="after" /></td></tr>
 </table>
 
 <script type="text/javascript" language="javascript">
+	function AddCommaToCurrency(number)
+	{
+		if(number == "")
+			return number;
+
+		var dollars = number.slice(1, number.indexOf("."));
+		if(dollars.length > 3)
+		{
+			var mod = dollars.length % 3;
+			var output = (mod > 0 ? dollars.substring(0, mod) : '');
+			for(var i = 0; i < Math.floor(dollars.length / 3); i++)
+			{
+				if (mod == 0 && i == 0)
+					output += dollars.substring(mod + 3 * i, mod + 3 * i + 3);
+				else
+					output += ',' + dollars.substring(mod + 3 * i, mod + 3 * i + 3);
+			}
+			return '$' + output + number.substring(number.indexOf("."));
+		}
+		return number;
+	}
+
+	function EnterCurrencyMask(event, element)
+	{
+		element.val(element.val().replace(",", ""));
+	}
+
+	function ExitCurrencyMask(event, element)
+	{
+		var value = element.val();
+		var zeros = 2 - (value.length - value.indexOf(".") - 1);
+		for(var i = 0; i < zeros; i++)
+			value += "0";
+
+		value = AddCommaToCurrency(value);
+		element.val(value);
+	}
+
 	$(document).ready(function ()
 	{
-		$("#ssn").rangerMask(RangerMask.ssn);
+		var newSsn = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
+		$("#ssn").rangerMask(newSsn);
+		var currency = RangerMask.define("$9{0,9}.99", { showMaskWhenEmpty: false, displayPlaceholder: "", onEnterMask: EnterCurrencyMask, onExitMask: ExitCurrencyMask });
+		$("#currency").rangerMask(currency);
 	});
 </script>
 </body>
