@@ -604,7 +604,7 @@ RangerMask.addDef("mm").place("1-9").place("0-9", null, true);
 RangerMask.addDef("MM").place("0-9", "0").place("0-9");
 RangerMask.addDef("dd").place("1-9").place("0-9", null, true); // TODO allow lookahead and behind expressions to create better validation?
 RangerMask.addDef("DD").place("0-9", "0").place("0-9");
-RangerMask.addDef("yy").place("0-9").place("0-9", true);
+RangerMask.addDef("yy").place("0-9").place("0-9", null, true);
 RangerMask.addDef("yyyy").place("0-9", null, true).place("0-9", null, true).place("0-9", null, true).place("0-9", null, true);
 RangerMask.addDef("yyYY").place("0-9").place("0-9").place("0-9", null, true).place("0-9", null, true);
 
