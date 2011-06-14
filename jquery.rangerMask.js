@@ -47,6 +47,7 @@ var RangerMask = {};
 		val: function() { return ""; },
 		displayVal: function () { return ""; },
 		maskedVal: function () { return ""; },
+		applyDefaultFill: function(data) { return ""; },
 		type: function() { return false; },
 		push: function() { return false; },
 		peekPull: function() { return ""; },
@@ -165,6 +166,14 @@ var RangerMask = {};
 			this.selectAll(data);
 			return data;
 		}
+	}
+	
+	Mask.prototype.applyDefaultFill = function(data)
+	{
+		if(this.isEmpty(data)) return;
+
+		for(var i=0; i<this.places.length; i++)
+			this.places[i].applyDefaultFill(data);
 	}
 
 	// Sets the selection in the data accounting for optional fields etc.
@@ -298,6 +307,13 @@ var RangerMask = {};
 			return this.mask.placeholder;
 	}
 
+	Place.prototype.applyDefaultFill = function(data)
+	{
+		var val = this.val(data);
+		if(val == "" && this.defaultFill != null)
+			this.val(data, this.defaultFill);
+	}
+
 	Place.prototype.type = function(data, char)
 	{
 		if(this.regEx.test(char))
@@ -421,6 +437,11 @@ var RangerMask = {};
 		return this.value;
 	}
 
+	FixedPlace.prototype.applyDefaultFill = function(data)
+	{
+		// no default fill for fixed places
+	}
+	
 	FixedPlace.prototype.type = function(data, char)
 	{
 		if(char == this.value)
@@ -689,6 +710,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		{
 			var element = $(this);
 			var data = getData(element, mask);
+			mask.applyDefaultFill(data);
 			element.val(mask.displayState(data).value);
 
 			if(mask.onExitMask)
