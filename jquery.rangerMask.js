@@ -62,8 +62,6 @@ var RangerMask = {};
 		this.regEx = null;
 		this.places = [];
 		this.placeholder = "_";
-		this.onEnterMask = null;
-		this.onExitMask = null;
 		this.displayPlaceholder = "\u3000";
 		this.showMaskWhenEmpty = true;
 	}
@@ -525,10 +523,6 @@ var RangerMask = {};
 		{
 			if(typeof options.placeholder == "string")
 				mask.placeholder = options.placeholder;
-			if(typeof options.onEnterMask == "function")
-				mask.onEnterMask = options.onEnterMask;
-			if(typeof options.onExitMask == "function")
-				mask.onExitMask = options.onExitMask;
 			if(typeof options.displayPlaceholder == "string")
 				mask.displayPlaceholder = options.displayPlaceholder;
 			if(typeof options.showMaskWhenEmpty == "boolean")
@@ -700,8 +694,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		.bind("focus.rangerMask", function (e)
 		{
 			var element = $(this);
-			if(mask.onEnterMask)
-				mask.onEnterMask(e, element);
+			element.trigger("beforeMaskIn", data);
 
 			var data = getData(element, mask);
 			setState(element, mask.maskedState(data));
@@ -713,8 +706,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			mask.applyDefaultFill(data);
 			element.val(mask.displayState(data).value);
 
-			if(mask.onExitMask)
-				mask.onExitMask(e, element);
+			element.trigger("afterMaskOut", data);
 		})
 		.bind("keydown.rangerMask", function (e)
 		{
@@ -766,6 +758,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 	};
 	$.fn.rangerUnmask = function ()
 	{
+		this.removeData("rangerMaskData");
 		return this.unbind(".rangerMask");
 	};
 })(jQuery);

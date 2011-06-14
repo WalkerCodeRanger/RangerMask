@@ -37,14 +37,16 @@
 		return number;
 	}
 
-	function EnterCurrencyMask(event, element)
+	function EnterCurrencyMask(event, data)
 	{
+	    var element = $(event.target);
 		element.val(element.val().replace(",", ""));
 	}
 
-	function ExitCurrencyMask(event, element)
+	function ExitCurrencyMask(event, data)
 	{
-		var value = element.val();
+	    var element = $(event.target);
+	    var value = element.val();
 		var zeros = 2 - (value.length - value.indexOf(".") - 1);
 		for(var i = 0; i < zeros; i++)
 			value += "0";
@@ -57,8 +59,8 @@
 	{
 		var newSsn = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
 		$("#ssn").rangerMask(newSsn);
-		var currency = RangerMask.define("$9{0,9}.99", { showMaskWhenEmpty: false, displayPlaceholder: "", onEnterMask: EnterCurrencyMask, onExitMask: ExitCurrencyMask });
-		$("#currency").rangerMask(currency);
+		var currency = RangerMask.define("$9{0,9}.99", { showMaskWhenEmpty: false, displayPlaceholder: "" });
+		$("#currency").rangerMask(currency).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
 	});
 </script>
 </body>
