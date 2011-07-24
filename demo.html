@@ -46,20 +46,14 @@
 	function ExitCurrencyMask(event, data)
 	{
 	    var element = $(event.target);
-	    var value = element.val();
-		var zeros = 2 - (value.length - value.indexOf(".") - 1);
-		for(var i = 0; i < zeros; i++)
-			value += "0";
-
-		value = AddCommaToCurrency(value);
-		element.val(value);
+		element.val(AddCommaToCurrency(element.val()));
 	}
 
 	$(document).ready(function ()
 	{
 		var newSsn = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
 		$("#ssn").rangerMask(newSsn);
-		var currency = RangerMask.define("$9{0,9}.99", { showMaskWhenEmpty: false, displayPlaceholder: "" });
+		var currency = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false, displayPlaceholder: "" });
 		$("#currency").rangerMask(currency).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
 	});
 </script>

@@ -5,7 +5,7 @@
  * Masked Input plugin for jQuery
  * Copyright (c) 2011 Jeff Walker, http://WalkerCodeRanger.com
  * Licensed under MIT license.
- * Version: 0.1.0
+ * Version: 0.9.0
  */
 
 // Namespace
@@ -37,6 +37,7 @@ var RangerMask = {};
 		return to;
 	}
 
+	// The null place that terminates the link list of places 
 	var nullPlace =
 	{
 		fixed: true,
@@ -56,7 +57,7 @@ var RangerMask = {};
 		del: function() { }
 	};
 
-	// Class Mask
+	// Class: Mask
 	function Mask()
 	{
 		this.regEx = null;
@@ -239,7 +240,7 @@ var RangerMask = {};
 		if(data.selection.length > 0)
 			this.deleteSelection(data);
 		else
-		// Find the first delete-able char ahead of the cursor
+			// Find the first delete-able char ahead of the cursor
 			for(var i=data.selection.start; i < this.places.length; i++)
 			{
 				var place = this.places[i];
@@ -596,7 +597,7 @@ var RangerMask = {};
 })(RangerMask);
 
 // Add standard definitions
-RangerMask.addDef("0").place("0-9", "0"); // TODO test and implement default fill
+RangerMask.addDef("0").place("0-9", "0");
 RangerMask.addDef("9").place("0-9");
 RangerMask.addDef("x").place("A-Fa-f0-9");
 RangerMask.addDef("a").place("A-Za-z");
@@ -630,6 +631,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 
 (function ($)
 {
+	// Returns a selection object with start and length of selection of the text in the element
 	function getSelection(element)
 	{
 		var selection = {};
@@ -647,6 +649,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		return selection;
 	}
 
+	// Sets the selection of the element, to the start and length provided
 	function setSelection(element, selection)
 	{
 		var end = selection.start + selection.length;
@@ -662,6 +665,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		}
 	}
 
+	// Returns the Data for the element with the current selection applied to it
 	function getData(element, mask)
 	{
 		var data = element.data("rangerMaskData");
@@ -675,11 +679,25 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		setSelection(element[0], state.selection);
 	}
 
+	$.fn.rangerUnmask = function ()
+	{
+		this.filter("input[type='text']")
+		.unbind(".rangerMask")
+		.each(function()
+		{
+			var element = $(this);
+			var data = element.data("rangerMaskData");
+			element.attr("maxlength", data.maxlength);
+			element.removeData("rangerMaskData");
+		});
+		return this;
+	};
+
 	$.fn.rangerMask = function (mask)
-	{	
-		// TODO remove any existing rangerMask on the elements
-		// TODO filter to element the mask works on?
-		this.each(function ()
+	{
+		this.filter("input[type='text']")
+		.rangerUnmask()// Remove any previously applied mask
+		.each(function ()
 		{
 			var element = $(this);
 			var data = mask.apply(element.val());
@@ -755,10 +773,5 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			}, 0);
 		});
 		return this;
-	};
-	$.fn.rangerUnmask = function ()
-	{
-		this.removeData("rangerMaskData");
-		return this.unbind(".rangerMask");
 	};
 })(jQuery);
