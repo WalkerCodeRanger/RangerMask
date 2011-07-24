@@ -528,6 +528,8 @@ var RangerMask = {};
 				mask.displayPlaceholder = options.displayPlaceholder;
 			if(typeof options.showMaskWhenEmpty == "boolean")
 				mask.showMaskWhenEmpty = options.showMaskWhenEmpty;
+			if(typeof options.defaultCallback == "function")
+				mask.defaultCallback = options.defaultCallback;
 		}
 
 		var lastDef = null;
@@ -687,7 +689,8 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		{
 			var element = $(this);
 			var data = element.data("rangerMaskData");
-			element.attr("maxlength", data.maxlength);
+			if(data)
+				element.attr("maxlength", data.maxlength);
 			element.removeData("rangerMaskData");
 		});
 		return this;
@@ -712,9 +715,8 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		.bind("focus.rangerMask", function (e)
 		{
 			var element = $(this);
-			element.trigger("beforeMaskIn", data);
-
 			var data = getData(element, mask);
+			element.trigger("beforeMaskIn", data);
 			setState(element, mask.maskedState(data));
 		})
 		.bind("blur.rangerMask", function (e)
@@ -722,6 +724,8 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			var element = $(this);
 			var data = getData(element, mask);
 			mask.applyDefaultFill(data);
+			if(mask.defaultCallback)
+				mask.defaultCallback(element, data);
 			element.val(mask.displayState(data).value);
 
 			element.trigger("afterMaskOut", data);

@@ -10,7 +10,9 @@
 <tr><td></td><td><input type="text" value="before" /></td></tr>
 <tr><td>SSN:</td><td><input id="ssn" type="text" value="" maxlength=11 /> 999-99-9999<br /></td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
-<tr><td>  $:</td><td><input id="currency" type="text" value="" maxlength=13 /> $9{0,9}.99<br /></td></tr>
+<tr><td>$:</td><td><input id="currency" type="text" value="" maxlength=13 /> $9{0,9}.99<br /></td></tr>
+<tr><td></td><td><input type="text" value="between" /></td></tr>
+<tr><td>Date:</td><td><input id="date" type="text" value="" maxlength=13 /> mm//dd//yyYY<br /></td></tr>
 <tr><td></td><td><input type="text" value="after" /></td></tr>
 </table>
 
@@ -49,12 +51,47 @@
 		element.val(AddCommaToCurrency(element.val()));
 	}
 
+	function DefaultFillDate(element, data)
+	{
+	    if(data.places[0] != "" && data.places[1] == "")
+	    {
+	        data.places[1] = data.places[0];
+	        data.places[0] = "0";
+	    }
+	    if(data.places[3] != "" && data.places[4] == "")
+	    {
+	        data.places[4] = data.places[3];
+	        data.places[3] = "0";
+	    }
+	    if(data.places.join("") != "//")
+	    {
+	        var year = data.places[6] + data.places[7] + data.places[8] + data.places[9];
+	        var currentYear = new Date().getFullYear();
+	        if(year == "")
+	            year = currentYear.toString();
+	        else
+	        {
+	            var value = parseInt(year);
+	            if(value + 1900 < currentYear - 50)
+	                year = (value + 2000).toString();
+	            else
+	                year = (value + 1900).toString();
+	        }
+	        data.places[6] = year[0];
+	        data.places[7] = year[1];
+	        data.places[8] = year[2];
+	        data.places[9] = year[3];
+	    }
+	}
+
 	$(document).ready(function ()
 	{
 		var newSsn = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
 		$("#ssn").rangerMask(newSsn);
 		var currency = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false, displayPlaceholder: "" });
 		$("#currency").rangerMask(currency).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
+		var dateMask = RangerMask.define("mm//dd//yyYY", { showMaskWhenEmpty: false, defaultCallback: DefaultFillDate })
+		$("#date").rangerMask(dateMask);
 	});
 </script>
 </body>
