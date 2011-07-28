@@ -711,12 +711,18 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			element.data("rangerMaskData", data);
 
 			element.val(mask.displayState(data).value);
+			data.unmodifiedStateValue = element.val();
 		})
 		.bind("focus.rangerMask", function (e)
 		{
 			var element = $(this);
 			var data = getData(element, mask);
 			element.trigger("beforeMaskIn", data);
+
+			// If the element value had been programmatically changed, update places (but not selection) to reflect that
+			if(element.val() != data.unmodifiedStateValue)
+				data.places = mask.apply(element.val()).places;
+
 			setState(element, mask.maskedState(data));
 		})
 		.bind("blur.rangerMask", function (e)
@@ -727,6 +733,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			if(mask.defaultCallback)
 				mask.defaultCallback(element, data);
 			element.val(mask.displayState(data).value);
+			data.unmodifiedStateValue = element.val();
 
 			element.trigger("afterMaskOut", data);
 		})
