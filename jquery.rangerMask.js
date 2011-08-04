@@ -846,6 +846,13 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			}
 			return false;
 		})
+		.bind("cut.rangerMask", function (e)
+		{
+			var element = $(this);
+			var data = getData(element, mask);
+			mask.del(data);
+			setState(element, mask.maskedState(data));
+		})
 		.bind("paste.rangerMask", function (e)
 		{
 			var selection = getSelection(this);
