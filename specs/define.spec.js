@@ -35,13 +35,13 @@ describe("RangerMask.define", function ()
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("s$ ");
-			expect(valueOf(mask, data)).toEqual("^s$ ^");
+			expect(maskedValueOf(mask, data)).toEqual("^s$ ^");
 		});
 
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("foo");
-			expect(valueOf(mask, data)).toEqual("^s$ ^");
+			expect(maskedValueOf(mask, data)).toEqual("^s$ ^");
 		});
 	});
 
@@ -77,19 +77,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("34");
-			expect(valueOf(mask, data)).toEqual("^_^");
+			expect(maskedValueOf(mask, data)).toEqual("^_^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("P");
-			expect(valueOf(mask, data)).toEqual("^P^");
+			expect(maskedValueOf(mask, data)).toEqual("^P^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("45x");
-			expect(valueOf(mask, data)).toEqual("^x^");
+			expect(maskedValueOf(mask, data)).toEqual("^x^");
 		});
 	});
 
@@ -110,19 +110,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("34");
-			expect(valueOf(mask, data)).toEqual("^___^");
+			expect(maskedValueOf(mask, data)).toEqual("^___^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("Pq4");
-			expect(valueOf(mask, data)).toEqual("^Pq4^");
+			expect(maskedValueOf(mask, data)).toEqual("^Pq4^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("Pqx");
-			expect(valueOf(mask, data)).toEqual("^Pq_^");
+			expect(maskedValueOf(mask, data)).toEqual("^Pq_^");
 		});
 	});
 
@@ -143,19 +143,19 @@ describe("RangerMask.define", function ()
 		it("should apply to a invalid value", function ()
 		{
 			data = mask.apply("Pq");
-			expect(valueOf(mask, data)).toEqual("^$__^");
+			expect(maskedValueOf(mask, data)).toEqual("^$__^");
 		});
 
 		it("should apply to an valid value", function ()
 		{
 			data = mask.apply("$34");
-			expect(valueOf(mask, data)).toEqual("^$34^");
+			expect(maskedValueOf(mask, data)).toEqual("^$34^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("2a");
-			expect(valueOf(mask, data)).toEqual("^$2_^");
+			expect(maskedValueOf(mask, data)).toEqual("^$2_^");
 		});
 	});
 
@@ -176,19 +176,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("af");
-			expect(valueOf(mask, data)).toEqual("^__%^");
+			expect(maskedValueOf(mask, data)).toEqual("^__%^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("45%");
-			expect(valueOf(mask, data)).toEqual("^45%^");
+			expect(maskedValueOf(mask, data)).toEqual("^45%^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("a4");
-			expect(valueOf(mask, data)).toEqual("^4_%^");
+			expect(maskedValueOf(mask, data)).toEqual("^4_%^");
 		});
 	});
 
@@ -209,19 +209,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("af");
-			expect(valueOf(mask, data)).toEqual("^_-_^");
+			expect(maskedValueOf(mask, data)).toEqual("^_-_^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("5-6");
-			expect(valueOf(mask, data)).toEqual("^5-6^");
+			expect(maskedValueOf(mask, data)).toEqual("^5-6^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("-9");
-			expect(valueOf(mask, data)).toEqual("^_-9^");
+			expect(maskedValueOf(mask, data)).toEqual("^_-9^");
 		});
 	});
 
@@ -242,19 +242,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("qn-kl");
-			expect(valueOf(mask, data)).toEqual("^{________-____-____-____-____________}^");
+			expect(maskedValueOf(mask, data)).toEqual("^{________-____-____-____-____________}^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("{F07DC0DA-F0DE-4F09-bcfd-63B36CC46FCF}");
-			expect(valueOf(mask, data)).toEqual("^{F07DC0DA-F0DE-4F09-bcfd-63B36CC46FCF}^");
+			expect(maskedValueOf(mask, data)).toEqual("^{F07DC0DA-F0DE-4F09-bcfd-63B36CC46FCF}^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("{F07DC0DA-F0DE-4F0@#");
-			expect(valueOf(mask, data)).toEqual("^{F07DC0DA-F0DE-4F0_-____-____________}^");
+			expect(maskedValueOf(mask, data)).toEqual("^{F07DC0DA-F0DE-4F0_-____-____________}^");
 		});
 	});
 
@@ -275,19 +275,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("af");
-			expect(valueOf(mask, data)).toEqual("^$_^");
+			expect(maskedValueOf(mask, data)).toEqual("^$_^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("$23");
-			expect(valueOf(mask, data)).toEqual("^$23^");
+			expect(maskedValueOf(mask, data)).toEqual("^$23^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("a8");
-			expect(valueOf(mask, data)).toEqual("^$8^");
+			expect(maskedValueOf(mask, data)).toEqual("^$8^");
 		});
 	});
 
@@ -308,19 +308,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("af");
-			expect(valueOf(mask, data)).toEqual("^_^");
+			expect(maskedValueOf(mask, data)).toEqual("^_^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("-6");
-			expect(valueOf(mask, data)).toEqual("^-6^");
+			expect(maskedValueOf(mask, data)).toEqual("^-6^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("-");
-			expect(valueOf(mask, data)).toEqual("^-_^");
+			expect(maskedValueOf(mask, data)).toEqual("^-_^");
 		});
 	});
 
@@ -341,19 +341,19 @@ describe("RangerMask.define", function ()
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("sdgh");
-			expect(valueOf(mask, data)).toEqual("^_/_/__^");
+			expect(maskedValueOf(mask, data)).toEqual("^_/_/__^");
 		});
 
 		it("should apply to a valid value", function ()
 		{
 			data = mask.apply("2/3/1986");
-			expect(valueOf(mask, data)).toEqual("^2/3/1986^");
+			expect(maskedValueOf(mask, data)).toEqual("^2/3/1986^");
 		});
 
 		it("should apply to a partially valid value", function ()
 		{
 			data = mask.apply("/48/82");
-			expect(valueOf(mask, data)).toEqual("^_/48/82^");
+			expect(maskedValueOf(mask, data)).toEqual("^_/48/82^");
 		});
 
 		describe("Simple repeat mask", function ()
@@ -373,19 +373,19 @@ describe("RangerMask.define", function ()
 			it("should apply to an invalid value", function ()
 			{
 				data = mask.apply("$#@");
-				expect(valueOf(mask, data)).toEqual("^______^");
+				expect(maskedValueOf(mask, data)).toEqual("^______^");
 			});
 
 			it("should apply to a valid value", function ()
 			{
 				data = mask.apply("g34625");
-				expect(valueOf(mask, data)).toEqual("^g34625^");
+				expect(maskedValueOf(mask, data)).toEqual("^g34625^");
 			});
 
 			it("should apply to a partially valid value", function ()
 			{
 				data = mask.apply("g4r5");
-				expect(valueOf(mask, data)).toEqual("^g45___^");
+				expect(maskedValueOf(mask, data)).toEqual("^g45___^");
 			});
 		});
 
@@ -406,19 +406,19 @@ describe("RangerMask.define", function ()
 			it("should apply to an invalid value", function ()
 			{
 				data = mask.apply("$#@");
-				expect(valueOf(mask, data)).toEqual("^___^");
+				expect(maskedValueOf(mask, data)).toEqual("^___^");
 			});
 
 			it("should apply to a valid value", function ()
 			{
 				data = mask.apply("g343");
-				expect(valueOf(mask, data)).toEqual("^g343^");
+				expect(maskedValueOf(mask, data)).toEqual("^g343^");
 			});
 
 			it("should apply to a partially valid value", function ()
 			{
 				data = mask.apply("g4r$");
-				expect(valueOf(mask, data)).toEqual("^g4_^");
+				expect(maskedValueOf(mask, data)).toEqual("^g4_^");
 			});
 		});
 
@@ -439,19 +439,19 @@ describe("RangerMask.define", function ()
 			it("should apply to an invalid value", function ()
 			{
 				data = mask.apply("$#@");
-				expect(valueOf(mask, data)).toEqual("^__^");
+				expect(maskedValueOf(mask, data)).toEqual("^__^");
 			});
 
 			it("should apply to a valid value", function ()
 			{
 				data = mask.apply("fe!!!!!!");
-				expect(valueOf(mask, data)).toEqual("^fe!!!!!!^");
+				expect(maskedValueOf(mask, data)).toEqual("^fe!!!!!!^");
 			});
 
 			it("should apply to a partially valid value", function ()
 			{
 				data = mask.apply("h4r2!!4!");
-				expect(valueOf(mask, data)).toEqual("^hr!!!^");
+				expect(maskedValueOf(mask, data)).toEqual("^hr!!!^");
 			});
 		});
 	});

@@ -39,13 +39,13 @@ describe("RangerMask.type", function ()
 		it("invalid char ignored", function ()
 		{
 			mask.type(data, "a");
-			expect(valueOf(mask, data)).toEqual("^___");
+			expect(maskedValueOf(mask, data)).toEqual("^___");
 		});
 
 		it("valid char accepted, cursor advanced", function ()
 		{
 			mask.type(data, "3");
-			expect(valueOf(mask, data)).toEqual("3^__");
+			expect(maskedValueOf(mask, data)).toEqual("3^__");
 		});
 	});
 
@@ -61,25 +61,25 @@ describe("RangerMask.type", function ()
 		it("invalid char ignored", function ()
 		{
 			mask.type(data, "a");
-			expect(valueOf(mask, data)).toEqual("^-$_");
+			expect(maskedValueOf(mask, data)).toEqual("^-$_");
 		});
 
 		it("fixed char advances cursor", function ()
 		{
 			mask.type(data, "-");
-			expect(valueOf(mask, data)).toEqual("-^$_");
+			expect(maskedValueOf(mask, data)).toEqual("-^$_");
 		});
 
 		it("fixed char seeks through fixed places", function ()
 		{
 			mask.type(data, "$");
-			expect(valueOf(mask, data)).toEqual("-$^_");
+			expect(maskedValueOf(mask, data)).toEqual("-$^_");
 		});
 
 		it("char valid for place after fixed places types", function ()
 		{
 			mask.type(data, "5");
-			expect(valueOf(mask, data)).toEqual("-$5^");
+			expect(maskedValueOf(mask, data)).toEqual("-$5^");
 		});
 	});
 
@@ -94,25 +94,25 @@ describe("RangerMask.type", function ()
 		it("invalid char ignored", function ()
 		{
 			mask.type(data, "$");
-			expect(valueOf(mask, data)).toEqual("^__");
+			expect(maskedValueOf(mask, data)).toEqual("^__");
 		});
 
 		it("valid char accepted, cursor advanced", function ()
 		{
 			mask.type(data, "f");
-			expect(valueOf(mask, data)).toEqual("f^__");
+			expect(maskedValueOf(mask, data)).toEqual("f^__");
 		});
 
 		it("char valid for next place accepted, cursor advanced", function ()
 		{
 			mask.type(data, "-");
-			expect(valueOf(mask, data)).toEqual("-^__");
+			expect(maskedValueOf(mask, data)).toEqual("-^__");
 		});
 
 		it("char valid after optional places accepted, cursor advanced", function ()
 		{
 			mask.type(data, "9");
-			expect(valueOf(mask, data)).toEqual("9^_");
+			expect(maskedValueOf(mask, data)).toEqual("9^_");
 		});
 	});
 
@@ -128,7 +128,7 @@ describe("RangerMask.type", function ()
 		{
 			mask.type(data, "a");
 			mask.type(data, "5");
-			expect(valueOf(mask, data)).toEqual("84^");
+			expect(maskedValueOf(mask, data)).toEqual("84^");
 		});
 	});
 
@@ -143,19 +143,19 @@ describe("RangerMask.type", function ()
 		it("should seek across required and optional places", function ()
 		{
 			mask.type(data, "-");
-			expect(valueOf(mask, data)).toEqual("$__-^$__/_");
+			expect(maskedValueOf(mask, data)).toEqual("$__-^$__/_");
 		});
 
 		it("should seek across required, optional and fixed places", function ()
 		{
 			mask.type(data, "$");
-			expect(valueOf(mask, data)).toEqual("$__-$^__/_");
+			expect(maskedValueOf(mask, data)).toEqual("$__-$^__/_");
 		});
 
 		it("should NOT seek beyond end of fixed places", function ()
 		{
 			mask.type(data, "/");
-			expect(valueOf(mask, data)).toEqual("$^__-$__/_");
+			expect(maskedValueOf(mask, data)).toEqual("$^__-$__/_");
 		});
 	});
 
@@ -170,35 +170,35 @@ describe("RangerMask.type", function ()
 		{
 			data = dataFor(mask, "^1_-__");
 			mask.type(data, "2");
-			expect(valueOf(mask, data)).toEqual("2^1-__");
+			expect(maskedValueOf(mask, data)).toEqual("2^1-__");
 		});
 
 		it("should push into optional place", function ()
 		{
 			data = dataFor(mask, "^21-__");
 			mask.type(data, "3");
-			expect(valueOf(mask, data)).toEqual("3^21-__");
+			expect(maskedValueOf(mask, data)).toEqual("3^21-__");
 		});
 
 		it("should push across fixed place", function ()
 		{
 			data = dataFor(mask, "^321-__");
 			mask.type(data, "4");
-			expect(valueOf(mask, data)).toEqual("4^32-1_");
+			expect(maskedValueOf(mask, data)).toEqual("4^32-1_");
 		});
 
 		it("should not be allowed when char does go into pushed place", function ()
 		{
 			data = dataFor(mask, "__-^7_");
 			mask.type(data, "6");
-			expect(valueOf(mask, data)).toEqual("__-^7_");
+			expect(maskedValueOf(mask, data)).toEqual("__-^7_");
 		});
 
 		it("should not be allowed to push past end", function ()
 		{
 			data = dataFor(mask, "__-_^7");
 			mask.type(data, "3");
-			expect(valueOf(mask, data)).toEqual("__-_^7");
+			expect(maskedValueOf(mask, data)).toEqual("__-_^7");
 		});
 	});
 });

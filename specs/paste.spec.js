@@ -7,27 +7,27 @@ describe("RangerMask.paste", function ()
 	{
 		data = dataFor(mask, "^___-__-____");
 		mask.paste(data, "123-45-6789");
-		expect(valueOf(mask, data)).toEqual("123-45-6789^");
+		expect(maskedValueOf(mask, data)).toEqual("123-45-6789^");
 	});
 
 	it("should paste as if typing values", function ()
 	{
 		data = dataFor(mask, "^___-__-____");
 		mask.paste(data, "a1b4cdf$59-23");
-		expect(valueOf(mask, data)).toEqual("145-9_-23^__");
+		expect(maskedValueOf(mask, data)).toEqual("145-9_-23^__");
 	});
 
 	it("should ignore invalid values", function ()
 	{
 		data = dataFor(mask, "_^45-67^-____");
 		mask.paste(data, "abscdefghi");
-		expect(valueOf(mask, data)).toEqual("_^45-67^-____");
+		expect(maskedValueOf(mask, data)).toEqual("_^45-67^-____");
 	});
 
 	it("should delete selection before pasting", function ()
 	{
 		data = dataFor(mask, "^678^-__-____");
 		mask.paste(data, "1");
-		expect(valueOf(mask, data)).toEqual("1^__-__-____");
+		expect(maskedValueOf(mask, data)).toEqual("1^__-__-____");
 	});
 });

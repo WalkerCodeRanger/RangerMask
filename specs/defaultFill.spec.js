@@ -15,14 +15,14 @@
 		{
 			data = dataFor(mask, "^1.2_");
 			mask.applyDefaultFill(data);
-			expect(valueOf(mask, data)).toEqual("^1.20");
+			expect(maskedValueOf(mask, data)).toEqual("^1.20");
 		});
 
 		it("should NOT apply default fill if entire field is blank", function ()
 		{
 			data = dataFor(mask, "^_.__");
 			mask.applyDefaultFill(data);
-			expect(valueOf(mask, data)).toEqual("^_.__");
+			expect(maskedValueOf(mask, data)).toEqual("^_.__");
 		});
 	});
 
@@ -37,7 +37,7 @@
 		{
 			data = dataFor(mask, "^1.");
 			mask.applyDefaultFill(data);
-			expect(valueOf(mask, data)).toEqual("^1.0");
+			expect(maskedValueOf(mask, data)).toEqual("^1.0");
 		});
 	});
 });

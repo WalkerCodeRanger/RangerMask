@@ -15,7 +15,7 @@
 		{
 			data = dataFor(mask, "^_____-____");
 			mask.type(data, "5");
-			expect(valueOf(mask, data)).toEqual("5^____-____");
+			expect(maskedValueOf(mask, data)).toEqual("5^____-____");
 		});
 	});
 
@@ -31,7 +31,7 @@
 			data = dataFor(mask, "^_-_-_-_-_");
 			mask.type(data, "5");
 			mask.type(data, "3");
-			expect(valueOf(mask, data)).toEqual("5-3^-_-_-_");
+			expect(maskedValueOf(mask, data)).toEqual("5-3^-_-_-_");
 		});
 	});
 });

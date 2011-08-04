@@ -3,9 +3,8 @@ String.prototype.insertAt = function (index, value)
 	return this.slice(0, index) + value + this.slice(index);
 }
 
-function valueOf(mask, data)
+function valueOfState(state)
 {
-	var state = mask.maskedState(data);
 	var value = state.value;
 	var selectionEnd = state.selection.start + state.selection.length;
 	if(selectionEnd != state.selection.start)
@@ -13,6 +12,21 @@ function valueOf(mask, data)
 
 	value = value.insertAt(state.selection.start, "^");
 	return value;
+}
+
+function maskedValueOf(mask, data)
+{
+	return valueOfState(mask.maskedState(data));
+}
+
+function displayValueOf(mask, data)
+{
+	return valueOfState(mask.displayState(data));
+}
+
+function rawValueOf(mask, data)
+{
+	return valueOfState(mask.rawState(data));
 }
 
 function dataFor(mask, value)
@@ -25,7 +39,7 @@ function dataFor(mask, value)
 		selectionLength -= 1; // Account for the ^ that started the selection
 
 	mask.setSelection(data, {start: selectionStart, length: selectionLength });
-	if(valueOf(mask, data) !== value)
+	if(maskedValueOf(mask, data) !== value)
 		throw "dataFor(\""+mask.maskedEmptyVal+"\", \""+value+"\") didn't match value provided, did you give an invalid value?";
 	return data;
 }
