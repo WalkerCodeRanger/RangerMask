@@ -21,15 +21,62 @@
 
 	describe("Show mask when empty = false", function ()
 	{
+		describe("with out repetition", function ()
+		{
+			beforeEach(function ()
+			{
+				mask = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false, displayPlaceholder: " " });
+			});
+
+
+			it("should NOT shown display placeholders when empty", function ()
+			{
+				data = dataFor(mask, "^___-__-____");
+				expect(displayValueOf(mask, data)).toEqual("^");
+			});
+		});
+
+		describe("with repetition", function ()
+		{
+			beforeEach(function ()
+			{
+				mask = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false, displayPlaceholder: "*" });
+			});
+
+			it("should NOT shown display placeholders when empty", function ()
+			{
+				data = dataFor(mask, "^$.__");
+				expect(displayValueOf(mask, data)).toEqual("^");
+			});
+		});
+	});
+
+	describe("Empty mask without fixed places", function ()
+	{
 		beforeEach(function ()
 		{
-			mask = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false, displayPlaceholder: " " });
+			mask = RangerMask.define("a99", { showMaskWhenEmpty: true, displayPlaceholder: "*" });
 		});
 
 
-		it("should NOT shown display placeholders when empty", function ()
+		it("should not display placeholders", function ()
 		{
-			data = dataFor(mask, "^___-__-____");
+			data = dataFor(mask, "^___");
+			expect(displayValueOf(mask, data)).toEqual("^");
+		});
+	});
+
+	describe("Empty mask with optional fixed places", function ()
+	{
+		beforeEach(function ()
+		{
+			mask = RangerMask.define("a99(-9)", { showMaskWhenEmpty: true, displayPlaceholder: "*" });
+		});
+
+
+		it("should not display placeholders", function ()
+		{
+			data = dataFor(mask, "^___-_");
 			expect(displayValueOf(mask, data)).toEqual("^");
 		});
 	});

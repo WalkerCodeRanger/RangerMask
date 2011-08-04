@@ -67,6 +67,7 @@ var RangerMask = {};
 		this.placeholder = "_";
 		this.displayPlaceholder = "\u3000";
 		this.rootSection = new Section(null, false);
+		this.containsRequiredFixedPlaces = false;
 	}
 
 	// public: The state of the data in unprocessed form, useful for programmatically manipulating the value from javascript
@@ -78,6 +79,10 @@ var RangerMask = {};
 	// public: The state of the data displayed when NOT editing
 	Mask.prototype.displayState = function (data)
 	{
+		// Never show value for empty mask without fixed places
+		if(!this.containsRequiredFixedPlaces && this.isEmpty(data))
+			return { value: "", selection: { start: 0, length: 0 }};
+
 		var displayPlaces = $.map(this.places, function(place, i) { return place.displayVal(data); });
 		return this.createState(data, displayPlaces);
 	}
@@ -566,6 +571,7 @@ var RangerMask = {};
 	{
 		var mask = new Mask();
 
+		// Apply any options to the mask
 		if(options)
 		{
 			if(typeof options.placeholder == "string")
@@ -583,6 +589,7 @@ var RangerMask = {};
 
 		while(pattern.length > 0)
 		{
+			// TODO Refactor to clean up and remove duplication of removing and push to three collections at once
 			var definition = startsWithDefinition(pattern, rmask.definitions);
 			if(definition) // Check for defined pattern // TODO should this come after predefined things?
 			{
@@ -600,14 +607,19 @@ var RangerMask = {};
 			{
 				// TODO check for null lastDef
 				mask.places = mask.places.slice(0, -lastDef.length); // remove last def from places
+				currentSection.parts = currentSection.parts.slice(0, -lastDef.length); // remove from currentSection too
 				$.each(lastDef, function(i, place)
 				{
-					mask.places.push(place.copy(currentSection, true));
+					var optionalPlace = place.copy(currentSection, true);
+					mask.places.push(optionalPlace);
+					currentSection.parts.push(optionalPlace);
 				});
 				pattern = pattern.substr(1);
+				lastDef = null; // So that another modifier can't follow this
 			}
 			else if(pattern.indexOf("{") == 0) // Begin repetition 
 			{
+				// TODO check for null lastDef
 				var repeatPattern = pattern.slice(0, pattern.indexOf("}")+1);
 				pattern = pattern.substr(repeatPattern.length);
 				repeatPattern = repeatPattern.slice(1, -1);
@@ -618,14 +630,18 @@ var RangerMask = {};
 					max = parseInt(parts[1]);
 				
 				mask.places = mask.places.slice(0, -lastDef.length); // remove last def from places
+				currentSection.parts = currentSection.parts.slice(0, -lastDef.length); // remove from currentSection too
 				for(var i=0; i<max; i++)
 				{
 					var optional = i >= min;
 					$.each(lastDef, function(i, place)
 					{
-						mask.places.push(place.copy(currentSection, optional));
+						var placeCopy = place.copy(currentSection, optional)
+						mask.places.push(placeCopy);
+						currentSection.parts.push(placeCopy);
 					});
 				}
+				lastDef = null; // So that another modifier can't follow this
 			}
 			else if(pattern.indexOf("(") == 0) // Enter an optional section
 			{
@@ -649,6 +665,8 @@ var RangerMask = {};
 
 				lastDef = [fixedPlace];
 				mask.places.push(fixedPlace);
+				if(!currentSection.optional)
+					mask.containsRequiredFixedPlaces = true;
 				currentSection.parts.push(fixedPlace);
 				pattern = pattern.substr(1);
 			}

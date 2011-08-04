@@ -90,11 +90,11 @@
 	{
 		var newSsn = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
 		$("#ssn").rangerMask(newSsn);
-		var currency = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false, displayPlaceholder: "" });
+		var currency = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false });
 		$("#currency").rangerMask(currency).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
-		var dateMask = RangerMask.define("mm//dd//yyYY", { showMaskWhenEmpty: false, defaultCallback: DefaultFillDate })
+		var dateMask = RangerMask.define("mm//dd//yyYY", { showMaskWhenEmpty: true, defaultCallback: DefaultFillDate })
 		$("#date").rangerMask(dateMask);
-		var zipMask = RangerMask.define("99999(-9999)", { showMaskWhenEmpty: false })
+		var zipMask = RangerMask.define("99999(-9999)")
 		$("#zip").rangerMask(zipMask);
 	});
 </script>
