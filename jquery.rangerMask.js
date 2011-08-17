@@ -416,36 +416,20 @@ var RangerMask = {};
 	// Returns the value that will be pulled, if the puller can pull it, he calls pull()
 	Place.prototype.peekPull = function(data)
 	{
-		var val = this.val(data);
-		if(val == "")
-		{
-			if(this.optional)
-			{
-				val = this.next.peekPull(data);
-				if(this.regEx.test(val))
-					return val; // Do a pull across this place
-				else
-					return "";
-			}
-			else
-				return ""; // Empty required places stop the pull
-		}
-		else
-			return val;
+		return this.val(data);
 	};
 
 	// Tells us our value has been pulled, we will now try to pull our next
 	Place.prototype.pull = function(data, first)
 	{
-		// Empty required places stop the pull (except the first could be a delete at en empty place)
+		// Empty required places stop the pull (except the first could be a delete at an empty place)
 		if(!first && !this.optional && this.val(data) == "")
 			return;
 
 		var val = this.next.peekPull(data);
-		if(val == "" || this.regEx.test(val))
+		if(val != "" && this.regEx.test(val))
 		{
-			if(!this.optional || this.val(data) != "") // We are not doing a pull across
-				this.val(data, val);
+			this.val(data, val);
 			this.next.pull(data, false);
 			return;
 		}

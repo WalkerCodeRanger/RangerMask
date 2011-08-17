@@ -215,7 +215,7 @@ describe("RangerMask.type", function ()
 			expect(maskedValueOf(mask, data)).toEqual("4^32-1_");
 		});
 
-		it("should not be allowed when char does go into pushed place", function ()
+		it("should not be allowed when char does not go into pushed place", function ()
 		{
 			data = dataFor(mask, "__-^7_");
 			mask.type(data, "6");
@@ -227,6 +227,21 @@ describe("RangerMask.type", function ()
 			data = dataFor(mask, "__-_^7");
 			mask.type(data, "3");
 			expect(maskedValueOf(mask, data)).toEqual("__-_^7");
+		});
+	});
+
+	describe("Pulling (move chars to the left to replace a char being typed over)", function ()
+	{
+		beforeEach(function ()
+		{
+			mask = RangerMask.define("99?.000%");
+		});
+
+		it("should not pull across empty optional place", function ()
+		{
+			data = dataFor(mask, "^5^.000%");
+			mask.type(data, "2");
+			expect(maskedValueOf(mask, data)).toEqual("2^.000%");
 		});
 	});
 });
