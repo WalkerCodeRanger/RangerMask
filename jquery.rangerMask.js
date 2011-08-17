@@ -577,6 +577,11 @@ var RangerMask = {};
 		return definition.length > 0 ? definition : null;
 	}
 
+	function isNumber(n)
+	{
+		return !isNaN(parseFloat(n)) && isFinite(n);
+	}
+
 	rmask.definitions = {};
 
 	rmask.addDef = function(name)
@@ -648,10 +653,18 @@ var RangerMask = {};
 				pattern = pattern.substr(repeatPattern.length);
 				repeatPattern = repeatPattern.slice(1, -1);
 				var parts = repeatPattern.split(",");
+				if(parts.length > 2 || !isNumber(parts[0]))
+					throw new Error("Invalid mask repetition (i.e. {..})");
+
 				var min = parseInt(parts[0]);
 				var max = min;
 				if(parts.length == 2)
+				{
+					if(!isNumber(parts[1]))
+						throw new Error("Invalid mask repetition (i.e. {..})");
+
 					max = parseInt(parts[1]);
+				}
 				
 				mask.places = mask.places.slice(0, -lastDef.length); // remove last def from places
 				currentSection.parts = currentSection.parts.slice(0, -lastDef.length); // remove from currentSection too

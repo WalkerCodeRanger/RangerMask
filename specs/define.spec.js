@@ -60,7 +60,7 @@ describe("RangerMask.define", function ()
 		});
 	});
 
-	describe("Mask incomplete escape", function ()
+	describe("Mask with incomplete escape", function ()
 	{
 		it("can't be defined", function ()
 		{
@@ -427,6 +427,38 @@ describe("RangerMask.define", function ()
 			{
 				data = mask.apply("g4r$");
 				expect(maskedValueOf(mask, data)).toEqual("^g4_^");
+			});
+
+			describe("with invalid min (i.e. {a,3})", function ()
+			{
+				it("can't be defined", function ()
+				{
+					expect(function () { RangerMask.define("a9{a,3}") }).toThrow(new Error("Invalid mask repetition (i.e. {..})"));
+				});
+			});
+
+			describe("with invalid max (i.e. {1,y})", function ()
+			{
+				it("can't be defined", function ()
+				{
+					expect(function () { RangerMask.define("a9{1,y}") }).toThrow(new Error("Invalid mask repetition (i.e. {..})"));
+				});
+			});
+
+			describe("with invalid separator (i.e. {2-3})", function ()
+			{
+				it("can't be defined", function ()
+				{
+					expect(function () { RangerMask.define("a9{2-3}") }).toThrow(new Error("Invalid mask repetition (i.e. {..})"));
+				});
+			});
+
+			describe("with too many sections (i.e. {1,3,4})", function ()
+			{
+				it("can't be defined", function ()
+				{
+					expect(function () { RangerMask.define("a9{1,3,4}") }).toThrow(new Error("Invalid mask repetition (i.e. {..})"));
+				});
 			});
 		});
 
