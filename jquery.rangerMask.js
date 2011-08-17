@@ -604,12 +604,6 @@ var RangerMask = {};
 
 		var lastDef = null;
 		var currentSection = mask.rootSection;
-		var pushPlace = function(place)
-		{
-			lastDef.push(place);
-			mask.places.push(place);
-			currentSection.parts.push(place);
-		};
 
 		while(pattern.length > 0)
 		{

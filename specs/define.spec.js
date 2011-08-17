@@ -45,11 +45,11 @@ describe("RangerMask.define", function ()
 		});
 	});
 
-	describe("Mask with escaped chars and escaped escape and incomplete escape", function ()
+	describe("Mask with escaped chars and escaped escape", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define("v/9v//v/");
+			mask = RangerMask.define("v/9v//v");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
@@ -57,6 +57,14 @@ describe("RangerMask.define", function ()
 		it("should treat escaped chars as fixed places", function ()
 		{
 			expect(mask.maskedEmptyVal).toEqual("v9v/v");
+		});
+	});
+
+	describe("Mask incomplete escape", function ()
+	{
+		it("can't be defined", function ()
+		{
+			expect(function () { RangerMask.define("vv/") }).toThrow(new Error("Escape " / " can't be at end of mask definition"));
 		});
 	});
 
