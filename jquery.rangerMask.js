@@ -383,10 +383,13 @@ var RangerMask = {};
 			}
 			return false;
 		}
-		else if(this.optional)
-			return this.next.type(data, character);
-		else
-			return this.next.seek(data, character, false);
+		else if(this.val(data) == "")
+		{
+			if(this.optional)
+				return this.next.type(data, character);
+			else
+				return this.next.seek(data, character, false);
+		}
 	};
 
 	Place.prototype.seek = function(data, character, fixedPlaceFound)

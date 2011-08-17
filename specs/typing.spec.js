@@ -157,6 +157,34 @@ describe("RangerMask.type", function ()
 			mask.type(data, "/");
 			expect(maskedValueOf(mask, data)).toEqual("$^__-$__/_");
 		});
+
+		it("should NOT seek out of non empty required places", function ()
+		{
+			data = dataFor(mask, "$9^5-$__/_");
+			mask.type(data, "-");
+			expect(maskedValueOf(mask, data)).toEqual("$9^5-$__/_");
+		});
+
+		it("should NOT seek across non empty required places", function ()
+		{
+			data = dataFor(mask, "$^_5-$__/_");
+			mask.type(data, "-");
+			expect(maskedValueOf(mask, data)).toEqual("$^_5-$__/_");
+		});
+
+		it("should NOT seek out of non empty optional places", function ()
+		{
+			data = dataFor(mask, "$95^s-$__/_");
+			mask.type(data, "-");
+			expect(maskedValueOf(mask, data)).toEqual("$95^s-$__/_");
+		});
+
+		it("should NOT seek across non empty optional places", function ()
+		{
+			data = dataFor(mask, "$^__s-$__/_");
+			mask.type(data, "-");
+			expect(maskedValueOf(mask, data)).toEqual("$^__s-$__/_");
+		});
 	});
 
 	describe("Pushing (move chars to the right to make room for a char being typed)", function ()
