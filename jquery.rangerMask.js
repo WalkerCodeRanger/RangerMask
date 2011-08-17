@@ -5,7 +5,7 @@
  * Masked Input plugin for jQuery
  * Copyright (c) 2011 Jeff Walker, http://WalkerCodeRanger.com
  * Licensed under MIT license.
- * Version: 0.9.0
+ * Version: 0.9.1
  */
 
 // Namespace
