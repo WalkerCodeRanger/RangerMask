@@ -75,11 +75,17 @@
 	            year = currentYear.toString();
 	        else
 	        {
-	            var value = parseInt(year);
-	            if(value + 1900 < currentYear - 50)
-	                year = (value + 2000).toString();
-	            else
-	                year = (value + 1900).toString();
+	        	var value = parseInt(year);
+	        	if(value < 100)
+	        	{
+	        		if(value + 1900 < currentYear - 50)
+	        			year = (value + 2000).toString();
+	        		else
+	        			year = (value + 1900).toString();
+	        	}
+
+				if (year.length < 4)
+					year = ('0000' + year).slice(-4);
 	        }
 	        data.places[6] = year[0];
 	        data.places[7] = year[1];
