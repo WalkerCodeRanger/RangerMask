@@ -839,7 +839,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			if(mask.defaultCallback)
 				mask.defaultCallback(element, data);
 			element.val(mask.displayState(data).value);
-			var valueChanged = data.unmodifiedStateValue == element.val()
+			var valueChanged = data.unmodifiedStateValue != element.val()
 			data.unmodifiedStateValue = element.val();
 
 			element.trigger("afterMaskOut", data);
