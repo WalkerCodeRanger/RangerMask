@@ -13,8 +13,10 @@
 <tr><td>$:</td><td><input id="currency" type="text" value="" maxlength=13 /> $9{0,9}.00 <input type=button value="Change" onclick="$('#currency').val('$9.95')" /> </td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
 <tr><td>Date:</td><td><input id="date" type="text" value="" maxlength=13 /> mm//dd//yyYY</td></tr>
-<tr><td></td><td><input type="text" value="after" /></td></tr>
+<tr><td></td><td><input type="text" value="between" /></td></tr>
 <tr><td>Zip:</td><td><input id="zip" type="text" value="" maxlength=13 /> 99999(-9999)</td></tr>
+<tr><td></td><td><input type="text" value="between" /></td></tr>
+<tr><td>%:</td><td><input id="percent" type="text" value="" maxlength=13 /> 09?.000%</td></tr>
 <tr><td></td><td><input type="text" value="after" /></td></tr>
 </table>
 
@@ -88,14 +90,16 @@
 
 	$(document).ready(function ()
 	{
-		var newSsn = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
-		$("#ssn").rangerMask(newSsn);
-		var currency = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false });
-		$("#currency").rangerMask(currency).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
+		var ssnMask = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
+		$("#ssn").rangerMask(ssnMask);
+		var currencyMask = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false });
+		$("#currency").rangerMask(currencyMask).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
 		var dateMask = RangerMask.define("mm//dd//yyYY", { showMaskWhenEmpty: true, defaultCallback: DefaultFillDate })
 		$("#date").rangerMask(dateMask);
 		var zipMask = RangerMask.define("99999(-9999)")
 		$("#zip").rangerMask(zipMask);
+		var percentMask = RangerMask.define("09?.000%", { showMaskWhenEmpty: false })
+		$("#percent").rangerMask(percentMask);
 	});
 </script>
 </body>

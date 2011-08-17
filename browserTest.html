@@ -13,11 +13,41 @@
 	<script type="text/javascript" language="javascript">
 		$(document).ready(function ()
 		{
+			function insertAt(s, index, value)
+			{
+				return s.slice(0, index) + value + s.slice(index);
+			}
+
+			function getSelection(element)
+			{
+				var selection = {};
+				if(element.setSelectionRange)
+				{
+					selection.start = element.selectionStart;
+					selection.length = element.selectionEnd - selection.start;
+				}
+				else if(document.selection && document.selection.createRange)
+				{
+					var range = document.selection.createRange();
+					selection.start = 0 - range.duplicate().moveStart('character', -100000);
+					selection.length = range.text.length;
+				}
+				return selection;
+			}
+
 			var test = $("#test");
 			var logArea = $("#log");
 			function log(message)
 			{
-				logArea.val(message + "\t\t\"" + test.val() + "\"\n" + logArea.val());
+				var selection = getSelection(test[0]);
+				var value = test.val();
+				var selectionEnd = selection.start + selection.length;
+				if(selectionEnd != selection.start)
+					value = insertAt(value, selectionEnd, "^");
+
+				value = insertAt(value, selection.start, "^");
+
+				logArea.val(message + "\t\t\"" + value + "\"\n" + logArea.val());
 			}
 
 			test
@@ -64,6 +94,10 @@
 			.bind("input", function (e)
 			{
 				log("input");
+			})
+			.bind("click", function (e)
+			{
+				log("click");
 			});
 		});
 	</script>
