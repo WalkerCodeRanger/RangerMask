@@ -336,20 +336,20 @@ describe("RangerMask.define", function ()
 	{
 		it("can be defined", function ()
 		{
-			mask = RangerMask.define("mm//dd//yyYY");
+			mask = RangerMask.define("mm//dd//yyyy");
 			expect(mask).toBeDefined();
 			expect(mask).not.toBeNull();
 		});
 
 		it("should have proper masked empty value", function ()
 		{
-			expect(mask.maskedEmptyVal).toEqual("_/_/__");
+			expect(mask.maskedEmptyVal).toEqual("_/_/_");
 		});
 
 		it("should apply to an invalid value", function ()
 		{
 			data = mask.apply("sdgh");
-			expect(maskedValueOf(mask, data)).toEqual("^_/_/__^");
+			expect(maskedValueOf(mask, data)).toEqual("^_/_/_^");
 		});
 
 		it("should apply to a valid value", function ()
