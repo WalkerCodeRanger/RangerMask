@@ -24,6 +24,14 @@
 			mask.applyDefaultFill(data);
 			expect(maskedValueOf(mask, data)).toEqual("^_.__");
 		});
+
+		it("should NOT apply default fill if optional section is empty", function ()
+		{
+			mask = RangerMask.define("9(.00)");
+			data = dataFor(mask, "6^.__");
+			mask.applyDefaultFill(data);
+			expect(maskedValueOf(mask, data)).toEqual("6^.__");
+		});
 	});
 
 	describe("Optional places", function ()
@@ -33,11 +41,11 @@
 			mask = RangerMask.define("9.0?");
 		});
 
-		it("should apply default fill", function ()
+		it("should NOT apply default fill", function ()
 		{
 			data = dataFor(mask, "^1.");
 			mask.applyDefaultFill(data);
-			expect(maskedValueOf(mask, data)).toEqual("^1.0");
+			expect(maskedValueOf(mask, data)).toEqual("^1.");
 		});
 	});
 });

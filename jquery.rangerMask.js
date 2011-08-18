@@ -191,10 +191,7 @@ var RangerMask = {};
 	// internal: Apply default fill, used when losing focus
 	Mask.prototype.applyDefaultFill = function(data)
 	{
-		if(this.isEmpty(data)) return;
-
-		for(var i=0; i<this.places.length; i++)
-			this.places[i].applyDefaultFill(data);
+		this.rootSection.applyDefaultFill(data);
 	};
 
 	// internal: Sets the selection in the data accounting for optional fields etc.
@@ -304,6 +301,14 @@ var RangerMask = {};
 		return true;
 	};
 
+	Section.prototype.applyDefaultFill = function(data)
+	{
+		if(this.isEmpty(data)) return;
+
+		for(var i=0; i<this.parts.length; i++)
+			this.parts[i].applyDefaultFill(data);
+	};
+
 	// Class Place
 	function Place(section, charClass, defaultFill, optional)
 	{
@@ -367,7 +372,7 @@ var RangerMask = {};
 	Place.prototype.applyDefaultFill = function(data)
 	{
 		var val = this.val(data);
-		if(val == "" && this.defaultFill != null)
+		if(val == "" && !this.optional && this.defaultFill != null)
 			this.val(data, this.defaultFill);
 	};
 
