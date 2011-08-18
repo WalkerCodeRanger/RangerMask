@@ -310,12 +310,13 @@ var RangerMask = {};
 	};
 
 	// Class Place
-	function Place(section, charClass, defaultFill, optional)
+	function Place(section, charClass, defaultFill, defaultCallback, optional)
 	{
 		this.fixed = false;
 		this.optional = optional || false;
 		this.charClass = charClass;
 		this.defaultFill = defaultFill;
+		this.defaultCallback = defaultCallback;
 		this.emptyVal = "";
 		this.regEx = new RegExp("^["+charClass+"]$");
 		this.section = section;
@@ -324,9 +325,9 @@ var RangerMask = {};
 	Place.prototype.copy = function(section, optional)
 	{
 		if(optional == undefined)
-			return new Place(section, this.charClass, this.defaultFill, this.optional);
+			return new Place(section, this.charClass, this.defaultFill, this.defaultCallback, this.optional);
 		else
-			return new Place(section, this.charClass, this.defaultFill, optional);
+			return new Place(section, this.charClass, this.defaultFill, this.defaultCallback, optional);
 	};
 
 	Place.prototype.init = function ()
@@ -372,8 +373,11 @@ var RangerMask = {};
 	Place.prototype.applyDefaultFill = function(data)
 	{
 		var val = this.val(data);
-		if(val == "" && !this.optional && this.defaultFill != null)
+		if(this.defaultFill && val == "" && !this.optional)
 			this.val(data, this.defaultFill);
+
+		if(this.defaultCallback)
+			this.defaultCallback(data, this.index);
 	};
 
 	Place.prototype.type = function(data, character)
@@ -464,7 +468,7 @@ var RangerMask = {};
 
 	FixedPlace.prototype.copy = function(section, optional)
 	{
-		return new Place(section, "\\"+this.value, undefined, optional);
+		return new Place(section, "\\"+this.value, undefined, undefined, optional);
 	};
 
 	FixedPlace.prototype.init = function ()
@@ -548,9 +552,9 @@ var RangerMask = {};
 		this.places = places;
 	}
 
-	PlaceBuilder.prototype.place = function(charClass, defaultFill, optional)
+	PlaceBuilder.prototype.place = function(charClass, defaultFill, optional, defaultCallback)
 	{
-		this.places.push(new Place(null, charClass, defaultFill, optional));
+		this.places.push(new Place(null, charClass, defaultFill, defaultCallback, optional));
 		return this;
 	};
 
@@ -713,6 +717,58 @@ var RangerMask = {};
 
 		return mask;
 	};
+
+	rmask.leadingZerosCallback = function(digits)
+	{
+		return function (data, index)
+		{
+			var start = index-(digits-1);
+			var value = data.places.slice(start, index+1).join("");
+
+			if(value != "")
+			{
+				while(value.length < digits)
+					value = "0" + value;
+
+				for(var i=0; i<value.length; i++)
+					data.places[start+i] = value[i];
+			}
+		};
+	};
+
+	rmask.capsCallback = function (data, index)
+	{
+		data.places[index] = data.places[index].toUpperCase();
+	};
+
+	rmask.yearCallback = function (data, index)
+	{
+		var start = index-(3);
+		var value = data.places.slice(start, index+1).join("");
+		var currentYear = new Date().getFullYear();
+
+		if(value == "")
+	        value = currentYear.toString();
+	    else
+		{
+			var year = parseInt(value);
+	        if(year < 100)
+	        {
+				var century = 1900;
+
+	        	if(year + century < currentYear - 49)
+	        		century = 2000;
+	        	
+	        	year += century
+	        }
+
+			if(value.length < 4)
+				value = ('0000' + year).slice(-4);
+		}
+
+		for(var i=0; i<value.length; i++)
+			data.places[start+i] = value[i];
+	};
 })(RangerMask);
 
 // Add standard definitions
@@ -720,13 +776,17 @@ RangerMask.addDef("0").place("0-9", "0");
 RangerMask.addDef("9").place("0-9");
 RangerMask.addDef("x").place("A-Fa-f0-9");
 RangerMask.addDef("a").place("A-Za-z");
-RangerMask.addDef("mm").place("0-9").place("0-9", null, true);
-RangerMask.addDef("MM").place("0-9", "0").place("0-9");
-RangerMask.addDef("dd").place("0-9").place("0-9", null, true);
-RangerMask.addDef("DD").place("0-9", "0").place("0-9");
-RangerMask.addDef("yy").place("0-9").place("0-9", null, true);
-RangerMask.addDef("yyyy").place("0-9", null, true).place("0-9", null, true).place("0-9", null, true).place("0-9", null, true);
-RangerMask.addDef("yyYY").place("0-9").place("0-9").place("0-9", null, true).place("0-9", null, true);
+RangerMask.addDef("h").place("0-9").place("0-9", null, true);
+RangerMask.addDef("hh").place("0-9").place("0-9", null, true, RangerMask.leadingZerosCallback(2));
+RangerMask.addDef("t").place("aApP");
+RangerMask.addDef("tt").place("aApP", null, false, RangerMask.capsCallback).place("mM", "M", false, RangerMask.capsCallback);
+RangerMask.addDef("d").place("0-9").place("0-9", null, true);
+RangerMask.addDef("dd").place("0-9").place("0-9", null, true, RangerMask.leadingZerosCallback(2));
+RangerMask.addDef("m").place("0-9").place("0-9", null, true);
+RangerMask.addDef("mm").place("0-9").place("0-9", null, true, RangerMask.leadingZerosCallback(2));
+RangerMask.addDef("yy").place("0-9").place("0-9", null, true, RangerMask.leadingZerosCallback(2));
+RangerMask.addDef("yyyy").place("0-9").place("0-9", null, true)
+							.place("0-9", null, true).place("0-9", null, true, RangerMask.yearCallback);
 
 // Define standard masks
 RangerMask.zip = RangerMask.define("9{5}");
