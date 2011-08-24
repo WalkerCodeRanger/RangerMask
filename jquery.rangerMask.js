@@ -741,30 +741,28 @@ var RangerMask = {};
 		data.places[index] = data.places[index].toUpperCase();
 	};
 
+	var currentYear = new Date().getFullYear();
+	var lastCentury = ((currentYear - (currentYear % 100) - 100) / 100).toString();
+
 	rmask.yearCallback = function (data, index)
 	{
 		var start = index-(3);
 		var value = data.places.slice(start, index+1).join("");
-		var currentYear = new Date().getFullYear();
 
 		if(value == "")
 	        value = currentYear.toString();
-	    else
+	    else if(value.length <= 2)
 		{
-			var year = parseInt(value);
-	        if(year < 100)
-	        {
-				var century = 1900;
+			var year = parseInt(lastCentury + ('00' + value).slice(-2)); // Safely convert to a year (handle '05' etc)
 
-	        	if(year + century < currentYear - 49)
-	        		century = 2000;
-	        	
-	        	year += century
-	        }
+			while(year < currentYear - 49)
+	        	year += 100;
 
-			if(value.length < 4)
-				value = ('0000' + year).slice(-4);
+			value = year.toString();
 		}
+
+		if(value.length < 4)
+			value = ('0000' + value).slice(-4);
 
 		for(var i=0; i<value.length; i++)
 			data.places[start+i] = value[i];
