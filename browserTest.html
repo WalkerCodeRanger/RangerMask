@@ -8,6 +8,7 @@
 	<input type="text" value="left" />
 	<input id="test" type="text" value="hello" maxlength="20" />
 	<input type="text" value="right" /><br />
+	<input type="checkbox" id="simulateKeypress" />Simulate Keypress<br />
 	<textarea id="log" cols="50" rows="20"></textarea><br />
 	<input type="button" value="Clear" onclick="$('#log').val('')" />
 	<script type="text/javascript" language="javascript">
@@ -78,6 +79,15 @@
 			.keypress(function (e)
 			{
 				log("keypress: '" + String.fromCharCode(e.which) + "' (" + e.which + ")");
+				if($("#simulateKeypress").is(':checked'))
+				{
+					if(e.ctrlKey || e.altKey || e.metaKey || e.which < 32)
+						return true;
+
+					if((32 <= e.which && e.which <= 126) || e.which >= 128)
+						test.val(test.val() + String.fromCharCode(e.which));
+					return false;
+				}
 			})
 			.keyup(function (e)
 			{
