@@ -14,7 +14,7 @@
 <tr><td></td><td><input type="text" value="between" /></td></tr>
 <tr><td>Date:</td><td><input id="date" type="text" value="" maxlength=13 /> mm//dd//yyyy hh:mm tt</td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
-<tr><td>Zip:</td><td><input id="zip" type="text" value="" maxlength=13 /> 99999(-9999)</td></tr>
+<tr><td>Zip:</td><td><input id="zip" type="text" value="" maxlength=13 /> 99999(-9999) <span id="zipChange"></span></td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
 <tr><td>%:</td><td><input id="percent" type="text" value="" maxlength=13 /> 09?.000%</td></tr>
 <tr><td></td><td><input type="text" value="after" /></td></tr>
@@ -55,6 +55,16 @@
 		element.val(AddCommaToCurrency(element.val()));
 	}
 
+	function ZipFocused()
+	{
+		$("#zipChange").html("");
+	}
+
+	function ZipChanged()
+	{
+		$("#zipChange").html($("#zipChange").html()+"Changed to: "+$("#zip").val());
+	}
+
 	$(document).ready(function ()
 	{
 		var ssnMask = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
@@ -63,8 +73,8 @@
 		$("#currency").rangerMask(currencyMask).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
 		var dateMask = RangerMask.define("mm//dd//yyyy hh:mm tt", { showMaskWhenEmpty: true })
 		$("#date").rangerMask(dateMask);
-		var zipMask = RangerMask.define("99999(-9999)")
-		$("#zip").rangerMask(zipMask);
+		var zipMask = RangerMask.define("99999(-9999)");
+		$("#zip").rangerMask(zipMask).focus(ZipFocused).change(ZipChanged);
 		var percentMask = RangerMask.define("09?.000%", { showMaskWhenEmpty: false })
 		$("#percent").rangerMask(percentMask);
 	});
