@@ -212,6 +212,8 @@ var RangerMask = {};
 
 			past += this.places[i].maskedVal(data).length;
 		}
+		// If we haven't found the selection end, just set it to the end (minus the null place)
+		data.selection.length = this.places.length - 1 - data.selection.start;
 	};
 
 	// public: type a character
@@ -891,7 +893,6 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 				data.places = mask.apply(newVal).places;
 				data.unmodifiedStateValue = newVal;
 			}
-
 			setState(element, mask.maskedState(data));
 		})
 		.bind("blur.rangerMask", function (e)

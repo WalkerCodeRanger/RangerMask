@@ -46,7 +46,7 @@
 	function EnterCurrencyMask(event, data)
 	{
 	    var element = $(event.target);
-		element.val(element.val().replace(",", ""));
+		element.val(element.val().replace(/,/g, ""));
 	}
 
 	function ExitCurrencyMask(event, data)
