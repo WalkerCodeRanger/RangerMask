@@ -43,13 +43,13 @@
 		return number;
 	}
 
-	function EnterCurrencyMask(event, data)
+	function EnterCurrencyMask(event)
 	{
 	    var element = $(event.target);
 		element.val(element.val().replace(/,/g, ""));
 	}
 
-	function ExitCurrencyMask(event, data)
+	function ExitCurrencyMask(event)
 	{
 	    var element = $(event.target);
 		element.val(AddCommaToCurrency(element.val()));
@@ -70,11 +70,11 @@
 		var ssnMask = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
 		$("#ssn").rangerMask(ssnMask);
 		var currencyMask = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false });
-		$("#currency").rangerMask(currencyMask).bind("beforeMaskIn", EnterCurrencyMask).bind("afterMaskOut", ExitCurrencyMask);
+		$("#currency").rangerMask(currencyMask).bind("rangerMask_Focus", EnterCurrencyMask).bind("rangerMask_Blur", ExitCurrencyMask);
 		var dateMask = RangerMask.define("mm//dd//yyyy hh:mm tt", { showMaskWhenEmpty: true })
 		$("#date").rangerMask(dateMask);
 		var zipMask = RangerMask.define("99999(-9999)");
-		$("#zip").rangerMask(zipMask).focus(ZipFocused).change(ZipChanged);
+		$("#zip").rangerMask(zipMask).bind("rangerMask_Focus", ZipFocused).bind("rangerMask_Change", ZipChanged);
 		var percentMask = RangerMask.define("09?.000%", { showMaskWhenEmpty: false })
 		$("#percent").rangerMask(percentMask);
 	});

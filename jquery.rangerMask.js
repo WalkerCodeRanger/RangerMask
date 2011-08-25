@@ -883,8 +883,8 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 		.bind("focus.rangerMask", function (e)
 		{
 			var element = $(this);
+			element.trigger("rangerMask_Focus");
 			var data = getData(element, mask);
-			element.trigger("beforeMaskIn", data);
 
 			// If the element value has been programmatically changed, update places (but not selection) to reflect that
 			if(element.val() != data.unmodifiedStateValue)
@@ -893,6 +893,7 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 				data.places = mask.apply(newVal).places;
 				data.unmodifiedStateValue = newVal;
 			}
+
 			setState(element, mask.maskedState(data));
 		})
 		.bind("blur.rangerMask", function (e)
@@ -906,9 +907,10 @@ RangerMask.guidBraced = RangerMask.define("/{x{8}-x{4}-x{4}-x{4}-x{12}/}");
 			var valueChanged = data.unmodifiedStateValue != element.val()
 			data.unmodifiedStateValue = element.val();
 
-			element.trigger("afterMaskOut", data);
 			if(valueChanged)
-				element.change();
+				element.trigger("rangerMask_Change");
+
+			element.trigger("rangerMask_Blur");
 		})
 		.bind("keydown.rangerMask", function (e)
 		{
