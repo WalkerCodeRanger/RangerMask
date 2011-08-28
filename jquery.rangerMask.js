@@ -67,7 +67,8 @@ var RangerMask = {};
 		displayVal: function () { return ""; },
 		maskedVal: function () { return ""; },
 		isEmpty: function () { return true; },
-		applyDefaultFill: function(data) { return ""; },
+		countPlaces: function() { return 0; },
+		applyDefaultFill: function() { return ""; },
 		type: function() { return false; },
 		push: function() { return false; },
 		peekPull: function() { return ""; },
@@ -372,6 +373,13 @@ var RangerMask = {};
 		return this.val(data) == "";
  	};
 
+	// Counts the number of places to the right (including this one) that are not empty
+	// before a fixed or empty place
+	Place.prototype.countPlaces = function(data)
+	{
+		return this.isEmpty(data) ? 0 : (1 + this.next.countPlaces(data));
+	};
+
 	Place.prototype.applyDefaultFill = function(data)
 	{
 		var val = this.val(data);
@@ -470,7 +478,10 @@ var RangerMask = {};
 
 	FixedPlace.prototype.copy = function(section, optional)
 	{
-		return new Place(section, "\\"+this.value, undefined, undefined, optional);
+		if(optional)
+			return new Place(section, "\\"+this.value, undefined, undefined, optional);
+		else
+			return new FixedPlace(section, this.value);
 	};
 
 	FixedPlace.prototype.init = function ()
@@ -500,6 +511,11 @@ var RangerMask = {};
  	{
 		return true;
  	};
+
+	FixedPlace.prototype.countPlaces = function(data)
+	{
+		return 0;
+	};
 
 	FixedPlace.prototype.applyDefaultFill = function(data)
 	{
@@ -548,6 +564,107 @@ var RangerMask = {};
 		// delete has no affect on a fixed place
 	};
 
+	// Class SeparatorPlace
+	function SeparatorPlace(section, value, groupSize)
+	{
+		this.fixed = true;
+		this.optional = true;
+		this.pattern = escapeRegEx(value)+"?";
+		this.value = value;
+		this.emptyVal = value;
+		this.maskedEmptyVal = value;
+		this.section = section;
+		this.groupSize = groupSize;
+	};
+
+	SeparatorPlace.prototype.copy = function(section, optional)
+	{
+		return new SeparatorPlace(section, this.value, this.groupSize);
+	};
+
+	SeparatorPlace.prototype.init = function ()
+	{
+	};
+
+	SeparatorPlace.prototype.val = function(data)
+	{
+		var placesToRight = this.next.countPlaces(data);
+		if(placesToRight > 0 && (placesToRight % this.groupSize) == 0)
+			return this.value;
+		else
+			return "";
+	};
+
+	SeparatorPlace.prototype.displayVal = function(data)
+	{
+		if(this.section.isDisplayed(data))
+			return this.val(data);
+		else
+			return "";
+	};
+
+	SeparatorPlace.prototype.maskedVal = function(data)
+	{
+		return this.val(data);
+	};
+
+	SeparatorPlace.prototype.isEmpty = function (data)
+	{
+		return true;
+	};
+
+	SeparatorPlace.prototype.countPlaces = function(data)
+	{
+		return this.next.countPlaces(data);
+	};
+
+	SeparatorPlace.prototype.applyDefaultFill = function(data)
+	{
+		// no default fill for fixed places
+	};
+	
+	SeparatorPlace.prototype.type = function(data, character)
+	{
+		if(character == this.value)
+		{
+			data.selection.start = this.index + 1;
+			return true;
+		}
+		else
+			return this.next.type(data, character);
+	};
+
+	SeparatorPlace.prototype.seek = function(data, character, fixedPlaceFound)
+	{
+		if(character == this.value)
+		{
+			data.selection.start = this.index + 1;
+			return true;
+		}
+
+		return this.next.seek(data, character, true);
+	};
+
+	SeparatorPlace.prototype.push = function(data, character)
+	{
+		return this.next.push(data, character);
+	};
+
+	SeparatorPlace.prototype.peekPull = function(data)
+	{
+		return this.next.peekPull(data); // pull across separator places
+	};
+
+	SeparatorPlace.prototype.pull = function(data, first)
+	{
+		this.next.pull(data, false); // pull across separator places
+	};
+
+	SeparatorPlace.prototype.del = function (data)
+	{
+		// delete has no affect on a separator place
+	};
+
 	// Class PlaceBuilder
 	function PlaceBuilder(places)
 	{
@@ -557,6 +674,18 @@ var RangerMask = {};
 	PlaceBuilder.prototype.place = function(charClass, defaultFill, optional, defaultCallback)
 	{
 		this.places.push(new Place(null, charClass, defaultFill, defaultCallback, optional));
+		return this;
+	};
+
+	PlaceBuilder.prototype.fixed = function(character)
+	{
+		this.places.push(new FixedPlace(null, character));
+		return this;
+	};
+
+	PlaceBuilder.prototype.separator = function(character, groupSize)
+	{
+		this.places.push(new SeparatorPlace(null, character, groupSize || 3));
 		return this;
 	};
 
@@ -773,7 +902,9 @@ var RangerMask = {};
 
 // Add standard definitions
 RangerMask.addDef("0").place("0-9", "0");
+RangerMask.addDef("0,").place("0-9", "0").separator(",", 3);
 RangerMask.addDef("9").place("0-9");
+RangerMask.addDef("9,").place("0-9").separator(",", 3);
 RangerMask.addDef("x").place("A-Fa-f0-9");
 RangerMask.addDef("a").place("A-Za-z");
 RangerMask.addDef("h").place("0-9").place("0-9", null, true);

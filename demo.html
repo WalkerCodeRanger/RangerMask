@@ -10,51 +10,17 @@
 <tr><td></td><td><input type="text" value="before" /></td></tr>
 <tr><td>SSN:</td><td><input id="ssn" type="text" value="" maxlength=11 /> 999-99-9999</td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
-<tr><td>$:</td><td><input id="currency" type="text" value="" maxlength=13 /> $9{0,9}.00 <input type=button value="Change" onclick="$('#currency').val('$9.95')" /> </td></tr>
+<tr><td>$:</td><td><input id="currency" type="text" value="" maxlength=13 /> $0,9,{0,9}.00 <input type=button value="Change" onclick="$('#currency').val('$9.95')" /> </td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
 <tr><td>Date:</td><td><input id="date" type="text" value="" maxlength=13 /> mm//dd//yyyy hh:mm tt</td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
 <tr><td>Zip:</td><td><input id="zip" type="text" value="" maxlength=13 /> 99999(-9999) <span id="zipChange"></span></td></tr>
 <tr><td></td><td><input type="text" value="between" /></td></tr>
-<tr><td>%:</td><td><input id="percent" type="text" value="" maxlength=13 /> 09?.000%</td></tr>
+<tr><td>%:</td><td><input id="percent" type="text" value="" maxlength=13 /> 09?9?.000%</td></tr>
 <tr><td></td><td><input type="text" value="after" /></td></tr>
 </table>
 
 <script type="text/javascript" language="javascript">
-	function AddCommaToCurrency(number)
-	{
-		if(number == "")
-			return number;
-
-		var dollars = number.slice(1, number.indexOf("."));
-		if(dollars.length > 3)
-		{
-			var mod = dollars.length % 3;
-			var output = (mod > 0 ? dollars.substring(0, mod) : '');
-			for(var i = 0; i < Math.floor(dollars.length / 3); i++)
-			{
-				if (mod == 0 && i == 0)
-					output += dollars.substring(mod + 3 * i, mod + 3 * i + 3);
-				else
-					output += ',' + dollars.substring(mod + 3 * i, mod + 3 * i + 3);
-			}
-			return '$' + output + number.substring(number.indexOf("."));
-		}
-		return number;
-	}
-
-	function EnterCurrencyMask(event)
-	{
-	    var element = $(event.target);
-		element.val(element.val().replace(/,/g, ""));
-	}
-
-	function ExitCurrencyMask(event)
-	{
-	    var element = $(event.target);
-		element.val(AddCommaToCurrency(element.val()));
-	}
-
 	function ZipFocused()
 	{
 		$("#zipChange").html("");
@@ -69,13 +35,13 @@
 	{
 		var ssnMask = RangerMask.define("999-99-9999", { showMaskWhenEmpty: false })
 		$("#ssn").rangerMask(ssnMask);
-		var currencyMask = RangerMask.define("$9{0,9}.00", { showMaskWhenEmpty: false });
-		$("#currency").rangerMask(currencyMask).bind("rangerMask_Focus", EnterCurrencyMask).bind("rangerMask_Blur", ExitCurrencyMask);
+		var currencyMask = RangerMask.define("$0,9,{0,9}.00", { showMaskWhenEmpty: false });
+		$("#currency").rangerMask(currencyMask);
 		var dateMask = RangerMask.define("mm//dd//yyyy hh:mm tt", { showMaskWhenEmpty: true })
 		$("#date").rangerMask(dateMask);
 		var zipMask = RangerMask.define("99999(-9999)");
 		$("#zip").rangerMask(zipMask).bind("rangerMask_Focus", ZipFocused).bind("rangerMask_Change", ZipChanged);
-		var percentMask = RangerMask.define("09?.000%", { showMaskWhenEmpty: false })
+		var percentMask = RangerMask.define("09?9?.000%", { showMaskWhenEmpty: false })
 		$("#percent").rangerMask(percentMask);
 	});
 </script>
