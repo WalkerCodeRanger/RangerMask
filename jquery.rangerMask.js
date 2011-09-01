@@ -862,7 +862,7 @@ var RangerMask = {};
 					value = "0" + value;
 
 				for(var i=0; i<value.length; i++)
-					data.places[start+i] = value[i];
+					data.places[start+i] = value.charAt(i);
 			}
 		};
 	};
@@ -896,7 +896,7 @@ var RangerMask = {};
 			value = ('0000' + value).slice(-4);
 
 		for(var i=0; i<value.length; i++)
-			data.places[start+i] = value[i];
+			data.places[start+i] = value.charAt(i);
 	};
 })(RangerMask);
 
